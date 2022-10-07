@@ -1,0 +1,40 @@
+version: '3'
+
+silent: true
+
+tasks:
+
+  build:
+    desc: Builds in debug mode
+    cmds:
+      - cmd: cargo build
+
+  clean:
+    desc: Cleans all targets
+    cmds:
+      - cmd: cargo clean
+
+  clippy:
+    desc: Runs clippy for all targets
+    cmds:
+      - cmd: cargo clippy --workspace --all-targets
+
+  doc:
+    desc: Generates documentation with private items
+    cmds:
+      - cmd: cargo doc --no-deps --document-private-items
+
+  doc-open:
+    desc: Generates documentation with private items and opens it in browser
+    cmds:
+      - cmd: cargo doc --no-deps --open --document-private-items
+
+  fmt:
+    desc: Runs code formatter
+    cmds:
+      - cmd: cargo fmt
+
+  test:
+    desc: Runs tests in debug mode
+    cmds:
+      - cmd: cargo test
