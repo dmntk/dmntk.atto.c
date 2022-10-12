@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.23)
 project(plane C)
 
-set(CMAKE_C_STANDARD 99)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
-add_executable(plane src/cell.c src/main.c src/plane.c src/plane.h)
+enable_testing()
+
+add_subdirectory(src)
+
+add_subdirectory(tests)

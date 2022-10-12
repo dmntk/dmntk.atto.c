@@ -16,4 +16,4 @@ typedef struct Cell_t {
 
 Cell *new_cell(wchar_t ch);
 
-#endif //PLANE_CELL_H
+#endif /* PLANE_CELL_H */

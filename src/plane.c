@@ -1,15 +1,74 @@
 #include <malloc.h>
+#include <errno.h>
+#include <wchar.h>
 
 #include "plane.h"
+
+#define LOAD_BUFFER_SIZE 5000
 
 /*
  * Creates a new empty plane.
  *
- * Returns a pointer to newly created plane.
+ * Returns: A pointer to newly created plane.
  */
 Plane *new_plane() {
   Plane *plane = malloc(sizeof(Plane));
   plane->start = NULL;
+  return plane;
+}
+
+/*
+ * Loads a plane from specified file.
+ */
+Plane *load_plane_from_file(const char file_name[]) {
+  FILE *f;
+  wchar_t buffer[LOAD_BUFFER_SIZE];
+  if ((f = fopen(file_name, "r")) == NULL) {
+    fprintf(stderr, "failed to open file: %s", file_name);
+    return NULL;
+  }
+  errno = 0;
+  Cell *row = NULL, *row_tail = NULL, *current = NULL;
+  Plane *plane = new_plane();
+  while (fgetws(buffer, LOAD_BUFFER_SIZE, f) != NULL) {
+    int i = 0;
+    while (buffer[i] != 0) {
+      if (buffer[i] != '\n') {
+        current = new_cell(buffer[i]);
+        if (row == NULL) {
+          row = current;
+          row_tail = current;
+        } else {
+          row_tail->right = current;
+          current->left = row_tail;
+          row_tail = current;
+        }
+      } else {
+        append_row(plane, row);
+        row = NULL;
+        row_tail = NULL;
+      }
+      i++;
+    }
+    if (row != NULL) {
+      append_row(plane, row);
+      row = NULL;
+      row_tail = NULL;
+    }
+  }
+  if (errno == EILSEQ) {
+    fprintf(stderr, "an invalid wide character was encountered");
+    fclose(f);
+    delete_plane(plane);
+    return NULL;
+  }
+  if (!feof(f)) {
+    fprintf(stderr, "file read error");
+    fclose(f);
+    delete_plane(plane);
+    return NULL;
+  }
+  fclose(f);
   return plane;
 }
 
@@ -33,7 +92,7 @@ void delete_plane(Plane *plane) {
 }
 
 /*
- * Appends a new row at the bottom of the plane.
+ * Appends a row at the bottom of the plane.
  */
 void append_row(Plane *plane, Cell *row) {
   if (plane->start == NULL) {
@@ -68,4 +127,47 @@ void display_plane(const Plane *plane) {
     printf("\n");
     row = row->bottom;
   }
+}
+
+/*
+ * Returns the total number of characters in plane,
+ * including additional newline characters for each row.
+ */
+size_t plane_len(const Plane *plane) {
+  size_t len = 0;
+  Cell *current = NULL, *row = plane->start;
+  while (row != NULL) {
+    current = row;
+    while (current != NULL) {
+      len++;
+      current = current->right;
+    }
+    row = row->bottom;
+    /* a place for ending newline, except the last row */
+    if (row != NULL) len++;
+  }
+  return len;
+}
+
+/*
+ * Returns the content of the plane as a string of characters.
+ * This function allocates required buffer for storing the content.
+ * The caller is responsible for deallocating this buffer.
+ */
+wchar_t *plane_to_string(const Plane *plane) {
+  size_t len = plane_len(plane);
+  wchar_t *buffer = calloc(sizeof(wchar_t), len + 1);
+  wchar_t *pos = buffer;
+  Cell *current = NULL, *row = plane->start;
+  while (row != NULL) {
+    current = row;
+    while (current != NULL) {
+      *pos++ = current->content;
+      current = current->right;
+    }
+    row = row->bottom;
+    if (row != NULL) *pos++ = L'\n';
+  }
+  *pos = 0;
+  return buffer;
 }
