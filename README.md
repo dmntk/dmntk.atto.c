@@ -1,3 +1,0 @@
-# plane
-
-DMNTK | Plane
