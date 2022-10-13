@@ -5,15 +5,18 @@
 
 #include "assertions.h"
 #include "tc_display.h"
+#include "tc_cursor_init.h"
+
+#define MATCH_NAME(actual, expected) (strcmp(actual, expected) == 0)
 
 /*
  * Run a test case with specified name.
  */
 int run_test_case(const char name[], const char dir[]) {
-  if (strcmp(name, TC_DISPLAY) == 0) {
-    return tc_display(dir);
-  }
-  printf("unknown test case name: %s\n", name);
+  if MATCH_NAME(name, TC_DISPLAY) return tc_display(dir);
+  if MATCH_NAME(name, TC_CURSOR_INIT) return tc_cursor_init(dir);
+
+  printf("\nERROR: Unknown test case name: %s", name);
   return ASSERT_RESULT_FAILURE;
 }
 
@@ -30,6 +33,6 @@ int main(const int argc, const char *argv[]) {
         return EXIT_FAILURE;
     }
   }
-  printf("invalid number of arguments, expected: 3, actual: %d\n", argc);
+  printf("ERROR: invalid number of arguments, expected: 3, actual: %d\n", argc);
   return EXIT_FAILURE;
 }

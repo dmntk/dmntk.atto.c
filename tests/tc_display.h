@@ -5,4 +5,4 @@
 
 int tc_display(const char dir[]);
 
-#endif /* PLANE_TC_DISPLAY_H */
+#endif // PLANE_TC_DISPLAY_H

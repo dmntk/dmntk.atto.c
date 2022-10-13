@@ -26,6 +26,16 @@ bool assert_equal_string(char *expected, char *actual) {
   }
 }
 
+bool assert_equal_size(size_t expected, size_t actual) {
+  if (expected == actual) {
+    return true;
+  } else {
+    printf("expected = %lu\n", expected);
+    printf("  actual = %lu\n", actual);
+    return false;
+  }
+}
+
 bool assert_equal_wide_string(const wchar_t *expected, const wchar_t *actual) {
   if (wcscmp(expected, actual) == 0) {
     return true;

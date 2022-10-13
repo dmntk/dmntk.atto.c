@@ -5,6 +5,7 @@
 #include "plane.h"
 
 #define LOAD_BUFFER_SIZE 5000
+#define CURSOR_POS(row, col) (CursorPos) {.row = row, .col = col};
 
 /*
  * Creates a new empty plane.
@@ -12,6 +13,7 @@
 Plane *new_plane() {
   Plane *plane = malloc(sizeof(Plane));
   plane->start = NULL;
+  plane->cursor = NULL;
   return plane;
 }
 
@@ -141,7 +143,7 @@ size_t plane_len(const Plane *plane) {
       current = current->right;
     }
     row = row->bottom;
-    /* a place for ending newline, except the last row */
+    // additional space for ending newline (except the last row)
     if (row != NULL) len++;
   }
   return len;
@@ -166,4 +168,47 @@ wchar_t *plane_to_string(const Plane *plane) {
   }
   *pos = 0;
   return buffer;
+}
+
+/*
+ * Initializes cursor position.
+ * This function tries to position a cursor right below/right the top-left corner,
+ * when the plane is not empty and contains minimum two rows and two columns,
+ * then the starting cursor position is set to row = 1 and col = 1.
+ */
+CursorPos cursor_init(Plane *plane) {
+  size_t row = 0, col = 0;
+  if (plane->start != NULL) {
+    plane->cursor = plane->start;
+    if (plane->cursor->bottom != NULL) {
+      plane->cursor = plane->cursor->bottom;
+      row++;
+    }
+    if (plane->cursor->right != NULL) {
+      plane->cursor = plane->cursor->right;
+      col++;
+    }
+  } else {
+    plane->cursor = NULL;
+  }
+  return CURSOR_POS(row, col);
+}
+
+/*
+ * Returns the current cursor position.
+ */
+CursorPos cursor_pos(Plane *plane) {
+  size_t row = 0, col = 0;
+  Cell *current = plane->cursor;
+  if (current != NULL) {
+    while (current->left != NULL) {
+      current = current->left;
+      col++;
+    }
+    while (current->top != NULL) {
+      current = current->top;
+      row++;
+    }
+  }
+  return CURSOR_POS(row, col);
 }

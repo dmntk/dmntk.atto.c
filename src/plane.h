@@ -7,8 +7,19 @@
  * Plane containing cells with characters.
  */
 typedef struct Plane_t {
-  Cell *start;
+  Cell *start;   // the left-top cell of the plane
+  Cell *cursor;  // cell under the cursor
 } Plane;
+
+/*
+ * Position of the cursor in plane coordinates.
+ * Row index and column index is given relative to the top-left
+ * corner of the plane.
+ */
+typedef struct CursorPos_t {
+  size_t row;  // Index of the row.
+  size_t col;  // index of the column.
+} CursorPos;
 
 /* Creates a new empty plane. */
 Plane *new_plane();
@@ -31,4 +42,10 @@ size_t plane_len(const Plane *plane);
 /* Returns the content of the plane as a string of characters. */
 wchar_t *plane_to_string(const Plane *plane);
 
-#endif /* PLANE_PLANE_H */
+/* Initializes cursor position. */
+CursorPos cursor_init(Plane *plane);
+
+/* Returns the current cursor position. */
+CursorPos cursor_pos(Plane *plane);
+
+#endif // PLANE_PLANE_H
