@@ -11,6 +11,13 @@
 #define MOVE_TO_VERT_LINE_LEFT(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_LEFT(box->right->ch)) box = box->right
 #define MOVE_TO_VERT_LINE_CROSSING(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_CROSSING(box->right->ch)) box = box->right
 
+#define C_RED     "\x001b[31m"
+#define C_YELLOW  "\x001b[33m"
+#define C_MAGENTA "\x001b[47m\x001b[31m"
+#define C_RESET   "\x001b[0m"
+#define C_CLEAR   "\x001b[0m"
+#define C_NONE    ""
+
 /*
  * Creates a new empty plane.
  */
@@ -151,12 +158,12 @@ void append_row(Plane *plane, Box *row) {
  * Prints the content of the plane to standard output.
  */
 void display_plane(const Plane *plane) {
-  Box *current = NULL, *row = plane->start;
+  Box *box, *row = plane->start;
   while (row != NULL) {
-    current = row;
-    while (current != NULL) {
-      printf("%lc", current->ch);
-      current = current->right;
+    box = row;
+    while (box != NULL) {
+      printf("%lc", box->ch);
+      box = box->right;
     }
     printf("\n");
     row = row->down;
@@ -167,12 +174,48 @@ void display_plane(const Plane *plane) {
  * Prints the attributes of all boxes of the plane to standard output.
  */
 void display_plane_attributes(const Plane *plane) {
-  Box *current = NULL, *row = plane->start;
+  Box *box, *row = plane->start;
   while (row != NULL) {
-    current = row;
-    while (current != NULL) {
-      if (current->attr & ATTR_JOIN) printf("J"); else printf("-");
-      current = current->right;
+    box = row;
+    while (box != NULL) {
+      if (box->attr & ATTR_JOIN) printf("J"); else printf("-");
+      box = box->right;
+    }
+    printf("\n");
+    row = row->down;
+  }
+}
+
+/*
+ * Prints the pointers of all boxes to standard output.
+ */
+void display_plane_pointers(const Plane *plane) {
+  Box *box, *row = plane->start;
+  bool u, u_ok, r_ok, bottom_ok, down_ok, l_ok;
+  char *s1, *r1, *s2, *r2;
+  while (row != NULL) {
+    box = row;
+    while (box != NULL) {
+      u = box->up != NULL;
+      u_ok = box->up != NULL ? box->up->down != NULL && box->up->down == box : true;
+      s1 = u_ok ? !u ? C_MAGENTA : C_NONE : C_RED;
+      r1 = u_ok ? !u ? C_RESET : C_NONE : C_RESET;
+      printf("┌%s%lc%s┐", s1, u ? L'┴' : L'─', r1);
+      box = box->right;
+    }
+    printf("\n");
+    box = row;
+    while (box != NULL) {
+      l_ok = box->left != NULL;
+      r_ok = box->right != NULL;
+      printf("%lc%lc%lc", l_ok ? L'┤' : L'│', box->ch, r_ok ? L'├' : L'│');
+      box = box->right;
+    }
+    printf("\n");
+    box = row;
+    while (box != NULL) {
+      printf("└%lc┘", box->down != NULL ? L'┬' : L'─');
+      box = box->right;
     }
     printf("\n");
     row = row->down;
@@ -226,7 +269,7 @@ wchar_t *plane_to_string(const Plane *plane) {
  * when the plane is not empty and contains minimum two rows and two columns,
  * then the starting cursor position is set to row = 1 and col = 1.
  */
-CursorPos cursor_init(Plane *plane) {
+Position cursor_init(Plane *plane) {
   size_t row = 0, col = 0;
   if (plane->start != NULL) {
     plane->cursor = plane->start;
@@ -241,13 +284,13 @@ CursorPos cursor_init(Plane *plane) {
   } else {
     plane->cursor = NULL;
   }
-  return (CursorPos) {.row = row, .col = col};
+  return (Position) {.row = row, .col = col};
 }
 
 /*
  * Returns the current cursor position.
  */
-CursorPos cursor_pos(Plane *plane) {
+Position cursor_pos(Plane *plane) {
   size_t row = 0, col = 0;
   Box *current = plane->cursor;
   if (current != NULL) {
@@ -260,7 +303,7 @@ CursorPos cursor_pos(Plane *plane) {
       row++;
     }
   }
-  return (CursorPos) {.row = row, .col = col};
+  return (Position) {.row = row, .col = col};
 }
 
 /*

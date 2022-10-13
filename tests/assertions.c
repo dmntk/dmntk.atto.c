@@ -80,7 +80,7 @@ bool assert_equal_double_eps(double expected, double actual, double epsilon) {
   }
 }
 
-bool assert_equal_cursor_pos(CursorPos expected, CursorPos actual) {
+bool assert_equal_cursor_pos(Position expected, Position actual) {
   if (expected.row == actual.row && expected.col == actual.col) {
     return true;
   } else {

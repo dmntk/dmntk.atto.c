@@ -9,7 +9,7 @@ int tc_cursor_init() {
   if (plane == NULL) return ASSERT_RESULT_FAILURE;
   // evaluate tested functionality
   cursor_init(plane);
-  CursorPos c_pos = cursor_pos(plane);
+  Position c_pos = cursor_pos(plane);
   delete_plane(plane);
   // verify results
   ASSERT_EQUAL_SIZE(1, c_pos.row);

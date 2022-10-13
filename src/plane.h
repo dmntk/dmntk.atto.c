@@ -15,10 +15,10 @@ typedef struct Plane_t {
  * Position of the cursor in plane coordinates.
  * Row index and column index is given relative to the top-left corner of the plane.
  */
-typedef struct CursorPos_t {
+typedef struct Position_t {
   size_t row;  // row index
   size_t col;  // col index
-} CursorPos;
+} Position;
 
 /* Creates a new empty plane. */
 Plane *plane_new();
@@ -41,6 +41,9 @@ void display_plane(const Plane *plane);
 /* Prints the attributes of all boxes of the plane to standard output. */
 void display_plane_attributes(const Plane *plane);
 
+/* Prints the pointers of all boxes to standard output. */
+void display_plane_pointers(const Plane *plane);
+
 /* Returns the total number of characters in plane. */
 size_t plane_len(const Plane *plane);
 
@@ -48,10 +51,10 @@ size_t plane_len(const Plane *plane);
 wchar_t *plane_to_string(const Plane *plane);
 
 /* Initializes cursor position. */
-CursorPos cursor_init(Plane *plane);
+Position cursor_init(Plane *plane);
 
 /* Returns the current cursor position. */
-CursorPos cursor_pos(Plane *plane);
+Position cursor_pos(Plane *plane);
 
 /* Moves cursor one box to the right. */
 void cursor_move_right(Plane *plane);

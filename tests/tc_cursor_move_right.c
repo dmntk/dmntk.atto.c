@@ -10,11 +10,11 @@ int tc_cursor_move_right() {
   // evaluate tested functionality
   cursor_init(plane);
   cursor_move_right(plane);
-  CursorPos pos_1 = cursor_pos(plane);
+  Position pos_1 = cursor_pos(plane);
   for (int i = 0; i < 200; ++i) cursor_move_right(plane);
-  CursorPos pos_2 = cursor_pos(plane);
+  Position pos_2 = cursor_pos(plane);
   cursor_move_left(plane);
-  CursorPos pos_3 = cursor_pos(plane);
+  Position pos_3 = cursor_pos(plane);
   delete_plane(plane);
   // verify results
   ASSERT_EQUAL_CURSOR_POS(1, 2, pos_1);

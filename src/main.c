@@ -15,13 +15,15 @@ int main() {
   cursor_init(plane);
   // display_plane(plane);
   // display_plane_attributes(plane);
+  // display_plane_pointers(plane);
 
   cursor_move_down(plane);
   insert_char(plane, L'A');
   insert_char(plane, L'B');
+  display_plane_pointers(plane);
   cursor_move_up(plane);
   for (int i = 0; i < 49; ++i) insert_char(plane, L'X');
-  display_plane(plane);
+  // display_plane(plane);
 
   delete_plane(plane);
   return EXIT_SUCCESS;
