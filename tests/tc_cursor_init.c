@@ -1,5 +1,3 @@
-#include <malloc.h>
-
 #include "../src/plane.h"
 
 #include "assertions.h"

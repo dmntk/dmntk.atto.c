@@ -7,11 +7,11 @@
  * Cell containing single character.
  */
 typedef struct Cell_t {
-  wchar_t content;        // the character stored in cell
-  struct Cell_t *top;     // points a cell above
-  struct Cell_t *right;   // points a cell to the right
-  struct Cell_t *bottom;  // points a cell below
-  struct Cell_t *left;    // points a cell to the left
+  wchar_t content;        // the character stored in this cell
+  struct Cell_t *left;    // points a cell to the left from this cell
+  struct Cell_t *right;   // points a cell to the right from this cell
+  struct Cell_t *up;      // points a cell above this cell
+  struct Cell_t *down;    // points a cell below this cell
 } Cell;
 
 Cell *new_cell(wchar_t ch);

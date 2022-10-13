@@ -19,12 +19,25 @@ set(TEST_SOURCES
   tc_display.c
   tc_display.h
   tc_cursor_init.c
-  tc_cursor_init.h)
+  tc_cursor_init.h
+  tc_cursor_move_right.c
+  tc_cursor_move_right.h
+  tc_cursor_move_left.c
+  tc_cursor_move_left.h
+  tc_cursor_move_up.c
+  tc_cursor_move_up.h
+  tc_cursor_move_down.c
+  tc_cursor_move_down.h
+  )
 
 add_executable(${PROJECT_NAME} ${APP_SOURCES} ${TEST_SOURCES})
 
-add_test(NAME tc_display     COMMAND ${PROJECT_NAME} tc_display     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_display COMMAND ${PROJECT_NAME} tc_display WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME tc_cursor_init COMMAND ${PROJECT_NAME} tc_cursor_init WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_cursor_move_right COMMAND ${PROJECT_NAME} tc_cursor_move_right WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_cursor_move_left COMMAND ${PROJECT_NAME} tc_cursor_move_left WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_cursor_move_up COMMAND ${PROJECT_NAME} tc_cursor_move_up WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_cursor_move_down COMMAND ${PROJECT_NAME} tc_cursor_move_down WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 
 

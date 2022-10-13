@@ -6,10 +6,14 @@
 #include "assertions.h"
 #include "tc_display.h"
 #include "tc_cursor_init.h"
+#include "tc_cursor_move_right.h"
+#include "tc_cursor_move_left.h"
+#include "tc_cursor_move_up.h"
+#include "tc_cursor_move_down.h"
 
 #define OUTPUT(s) #s
 #define STRINGIFY(s) OUTPUT(s)
-#define EQUALS(s1,s2) strcmp(s1, s2) == 0
+#define EQUALS(s1, s2) strcmp(s1, s2) == 0
 #define RUN_MATCHED(name, test_name) if (EQUALS(name, STRINGIFY(test_name))) return test_name()
 #define RUN(test_name) if (test_name() == ASSERT_RESULT_FAILURE) return ASSERT_RESULT_FAILURE
 
@@ -19,6 +23,10 @@
 int run_all() {
   RUN(tc_display);
   RUN(tc_cursor_init);
+  RUN(tc_cursor_move_right);
+  RUN(tc_cursor_move_left);
+  RUN(tc_cursor_move_up);
+  RUN(tc_cursor_move_down);
   return ASSERT_RESULT_SUCCESS;
 }
 
@@ -28,6 +36,10 @@ int run_all() {
 int run_test_case(const char name[]) {
   RUN_MATCHED(name, tc_display);
   RUN_MATCHED(name, tc_cursor_init);
+  RUN_MATCHED(name, tc_cursor_move_right);
+  RUN_MATCHED(name, tc_cursor_move_left);
+  RUN_MATCHED(name, tc_cursor_move_up);
+  RUN_MATCHED(name, tc_cursor_move_down);
   printf("\nERROR: Unknown test case name: %s", name);
   return ASSERT_RESULT_FAILURE;
 }

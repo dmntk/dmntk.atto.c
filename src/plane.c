@@ -3,9 +3,9 @@
 #include <wchar.h>
 
 #include "plane.h"
+#include "glyphs.h"
 
 #define LOAD_BUFFER_SIZE 5000
-#define CURSOR_POS(row, col) (CursorPos) {.row = row, .col = col};
 
 /*
  * Creates a new empty plane.
@@ -79,7 +79,7 @@ void delete_plane(Plane *plane) {
   Cell *row_head = plane->start;
   Cell *row_next = NULL, *current = NULL;
   while (row_head != NULL) {
-    row_next = row_head->bottom;
+    row_next = row_head->down;
     current = row_head;
     while (current != NULL) {
       row_head = current->right;
@@ -99,16 +99,16 @@ void append_row(Plane *plane, Cell *row) {
     plane->start = row;
   } else {
     Cell *row_last = plane->start;
-    while (row_last->bottom != NULL) {
-      row_last = row_last->bottom;
+    while (row_last->down != NULL) {
+      row_last = row_last->down;
     }
-    row_last->bottom = row;
-    row->top = row_last;
+    row_last->down = row;
+    row->up = row_last;
     while (row_last->right != NULL && row->right != NULL) {
       row_last = row_last->right;
       row = row->right;
-      row_last->bottom = row;
-      row->top = row_last;
+      row_last->down = row;
+      row->up = row_last;
     }
   }
 }
@@ -125,7 +125,7 @@ void display_plane(const Plane *plane) {
       current = current->right;
     }
     printf("\n");
-    row = row->bottom;
+    row = row->down;
   }
 }
 
@@ -142,7 +142,7 @@ size_t plane_len(const Plane *plane) {
       len++;
       current = current->right;
     }
-    row = row->bottom;
+    row = row->down;
     // additional space for ending newline (except the last row)
     if (row != NULL) len++;
   }
@@ -163,7 +163,7 @@ wchar_t *plane_to_string(const Plane *plane) {
       *pos++ = current->content;
       current = current->right;
     }
-    row = row->bottom;
+    row = row->down;
     if (row != NULL) *pos++ = L'\n';
   }
   *pos = 0;
@@ -180,8 +180,8 @@ CursorPos cursor_init(Plane *plane) {
   size_t row = 0, col = 0;
   if (plane->start != NULL) {
     plane->cursor = plane->start;
-    if (plane->cursor->bottom != NULL) {
-      plane->cursor = plane->cursor->bottom;
+    if (plane->cursor->down != NULL) {
+      plane->cursor = plane->cursor->down;
       row++;
     }
     if (plane->cursor->right != NULL) {
@@ -191,7 +191,7 @@ CursorPos cursor_init(Plane *plane) {
   } else {
     plane->cursor = NULL;
   }
-  return CURSOR_POS(row, col);
+  return (CursorPos) {.row = row, .col = col};
 }
 
 /*
@@ -205,10 +205,78 @@ CursorPos cursor_pos(Plane *plane) {
       current = current->left;
       col++;
     }
-    while (current->top != NULL) {
-      current = current->top;
+    while (current->up != NULL) {
+      current = current->up;
       row++;
     }
   }
-  return CURSOR_POS(row, col);
+  return (CursorPos) {.row = row, .col = col};
+}
+
+/*
+ * Moves cursor one cell to the right.
+ * If the cell to the right contains a vertical line, then the cursor jumps over it,
+ * except a case when after this line there are no more cells.
+ */
+void cursor_move_right(Plane *plane) {
+  if (plane->cursor != NULL && plane->cursor->right != NULL) {
+    if IS_VERT_LINE(plane->cursor->right->content) {
+      if (plane->cursor->right->right != NULL && !IS_VERT_LINE(plane->cursor->right->right->content)) {
+        plane->cursor = plane->cursor->right->right;
+      }
+    } else {
+      plane->cursor = plane->cursor->right;
+    }
+  }
+}
+
+/*
+ * Moves cursor one cell to the left.
+ * If the cell to the left contains a vertical line, then the cursor jumps over it,
+ * except a case when before this line there are no more cells.
+ */
+void cursor_move_left(Plane *plane) {
+  if (plane->cursor != NULL && plane->cursor->left != NULL) {
+    if IS_VERT_LINE(plane->cursor->left->content) {
+      if (plane->cursor->left->left != NULL && !IS_VERT_LINE(plane->cursor->left->left->content)) {
+        plane->cursor = plane->cursor->left->left;
+      }
+    } else {
+      plane->cursor = plane->cursor->left;
+    }
+  }
+}
+
+/*
+ * Moves cursor one cell up.
+ * If the cell above contains a horizontal line, then the cursor jumps over it,
+ * except a case when above this line there are no more cells.
+ */
+void cursor_move_up(Plane *plane) {
+  if (plane->cursor != NULL && plane->cursor->up != NULL) {
+    if IS_HORZ_LINE(plane->cursor->up->content) {
+      if (plane->cursor->up->up != NULL && !IS_HORZ_LINE(plane->cursor->up->up->content)) {
+        plane->cursor = plane->cursor->up->up;
+      }
+    } else {
+      plane->cursor = plane->cursor->up;
+    }
+  }
+}
+
+/*
+ * Moves cursor one cell down.
+ * If the cell below contains a vertical line, then the cursor jumps over it,
+ * except a case when below this line there are no more cells.
+ */
+void cursor_move_down(Plane *plane) {
+  if (plane->cursor != NULL && plane->cursor->down != NULL) {
+    if IS_HORZ_LINE(plane->cursor->down->content) {
+      if (plane->cursor->down->down != NULL && !IS_HORZ_LINE(plane->cursor->down->down->content)) {
+        plane->cursor = plane->cursor->down->down;
+      }
+    } else {
+      plane->cursor = plane->cursor->down;
+    }
+  }
 }

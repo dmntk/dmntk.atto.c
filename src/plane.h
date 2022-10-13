@@ -48,4 +48,16 @@ CursorPos cursor_init(Plane *plane);
 /* Returns the current cursor position. */
 CursorPos cursor_pos(Plane *plane);
 
+/* Moves cursor one cell to the right. */
+void cursor_move_right(Plane *plane);
+
+/* Moves cursor one cell to the left. */
+void cursor_move_left(Plane *plane);
+
+/* Moves cursor one cell up. */
+void cursor_move_up(Plane *plane);
+
+/* Moves cursor one cell down. */
+void cursor_move_down(Plane *plane);
+
 #endif // PLANE_PLANE_H
