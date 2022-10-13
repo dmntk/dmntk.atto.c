@@ -1,20 +1,19 @@
 #ifndef PLANE_PLANE_H
 #define PLANE_PLANE_H
 
-#include "cell.h"
+#include "box.h"
 
 /*
- * Plane containing cells with characters.
+ * Plane containing boxes with characters.
  */
 typedef struct Plane_t {
-  Cell *start;   // the left-top cell of the plane
-  Cell *cursor;  // cell under the cursor
+  Box *start;   // the left-top box of the plane
+  Box *cursor;  // box under the cursor
 } Plane;
 
 /*
  * Position of the cursor in plane coordinates.
- * Row index and column index is given relative to the top-left
- * corner of the plane.
+ * Row index and column index is given relative to the top-left corner of the plane.
  */
 typedef struct CursorPos_t {
   size_t row;  // row index
@@ -31,7 +30,7 @@ Plane *load_plane_from_file(const char file_name[]);
 void delete_plane(Plane *plane);
 
 /* Appends a row at the bottom of the plane. */
-void append_row(Plane *plane, Cell *row);
+void append_row(Plane *plane, Box *row);
 
 /* Prints the content of the plane to standard output. */
 void display_plane(const Plane *plane);
@@ -48,16 +47,16 @@ CursorPos cursor_init(Plane *plane);
 /* Returns the current cursor position. */
 CursorPos cursor_pos(Plane *plane);
 
-/* Moves cursor one cell to the right. */
+/* Moves cursor one box to the right. */
 void cursor_move_right(Plane *plane);
 
-/* Moves cursor one cell to the left. */
+/* Moves cursor one box to the left. */
 void cursor_move_left(Plane *plane);
 
-/* Moves cursor one cell up. */
+/* Moves cursor one box up. */
 void cursor_move_up(Plane *plane);
 
-/* Moves cursor one cell down. */
+/* Moves cursor one box down. */
 void cursor_move_down(Plane *plane);
 
 #endif // PLANE_PLANE_H

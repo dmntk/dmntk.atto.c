@@ -6,8 +6,8 @@ set(CMAKE_C_STANDARD 99)
 
 set(SOURCES
   main.c
-  cell.c
-  cell.h
+  box.c
+  box.h
   plane.c
   plane.h
   glyphs.c

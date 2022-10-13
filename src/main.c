@@ -2,7 +2,7 @@
 #include <locale.h>
 
 #include "plane.h"
-#include "cell.h"
+#include "box.h"
 
 /*
  * Main entrypoint of the application.

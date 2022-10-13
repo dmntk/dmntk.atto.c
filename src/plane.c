@@ -28,13 +28,13 @@ Plane *load_plane_from_file(const char file_name[]) {
     return NULL;
   }
   errno = 0;
-  Cell *row = NULL, *row_tail = NULL, *current = NULL;
+  Box *row = NULL, *row_tail = NULL, *current = NULL;
   Plane *plane = new_plane();
   while (fgetws(buffer, LOAD_BUFFER_SIZE, f) != NULL) {
     int i = 0;
     while (buffer[i] != 0) {
       if (buffer[i] != '\n') {
-        current = new_cell(buffer[i]);
+        current = new_box(buffer[i]);
         if (row == NULL) {
           row = current;
           row_tail = current;
@@ -76,8 +76,8 @@ Plane *load_plane_from_file(const char file_name[]) {
  * Deletes the plane.
  */
 void delete_plane(Plane *plane) {
-  Cell *row_head = plane->start;
-  Cell *row_next = NULL, *current = NULL;
+  Box *row_head = plane->start;
+  Box *row_next = NULL, *current = NULL;
   while (row_head != NULL) {
     row_next = row_head->down;
     current = row_head;
@@ -94,11 +94,11 @@ void delete_plane(Plane *plane) {
 /*
  * Appends a row at the bottom of the plane.
  */
-void append_row(Plane *plane, Cell *row) {
+void append_row(Plane *plane, Box *row) {
   if (plane->start == NULL) {
     plane->start = row;
   } else {
-    Cell *row_last = plane->start;
+    Box *row_last = plane->start;
     while (row_last->down != NULL) {
       row_last = row_last->down;
     }
@@ -117,7 +117,7 @@ void append_row(Plane *plane, Cell *row) {
  * Prints the content of the plane to standard output.
  */
 void display_plane(const Plane *plane) {
-  Cell *current = NULL, *row = plane->start;
+  Box *current = NULL, *row = plane->start;
   while (row != NULL) {
     current = row;
     while (current != NULL) {
@@ -135,7 +135,7 @@ void display_plane(const Plane *plane) {
  */
 size_t plane_len(const Plane *plane) {
   size_t len = 0;
-  Cell *current = NULL, *row = plane->start;
+  Box *current = NULL, *row = plane->start;
   while (row != NULL) {
     current = row;
     while (current != NULL) {
@@ -156,7 +156,7 @@ wchar_t *plane_to_string(const Plane *plane) {
   size_t len = plane_len(plane);
   wchar_t *buffer = calloc(sizeof(wchar_t), len + 1);
   wchar_t *pos = buffer;
-  Cell *current = NULL, *row = plane->start;
+  Box *current = NULL, *row = plane->start;
   while (row != NULL) {
     current = row;
     while (current != NULL) {
@@ -199,7 +199,7 @@ CursorPos cursor_init(Plane *plane) {
  */
 CursorPos cursor_pos(Plane *plane) {
   size_t row = 0, col = 0;
-  Cell *current = plane->cursor;
+  Box *current = plane->cursor;
   if (current != NULL) {
     while (current->left != NULL) {
       current = current->left;
@@ -214,8 +214,8 @@ CursorPos cursor_pos(Plane *plane) {
 }
 
 /*
- * Moves cursor one cell to the right.
- * If the cell to the right contains a vertical line, then the cursor jumps over it,
+ * Moves cursor one box to the right.
+ * If the box to the right contains a vertical line, then the cursor jumps over it,
  * except a case when after this line there are no more cells.
  */
 void cursor_move_right(Plane *plane) {
@@ -231,8 +231,8 @@ void cursor_move_right(Plane *plane) {
 }
 
 /*
- * Moves cursor one cell to the left.
- * If the cell to the left contains a vertical line, then the cursor jumps over it,
+ * Moves cursor one box to the left.
+ * If the box to the left contains a vertical line, then the cursor jumps over it,
  * except a case when before this line there are no more cells.
  */
 void cursor_move_left(Plane *plane) {
@@ -248,8 +248,8 @@ void cursor_move_left(Plane *plane) {
 }
 
 /*
- * Moves cursor one cell up.
- * If the cell above contains a horizontal line, then the cursor jumps over it,
+ * Moves cursor one box up.
+ * If the box above contains a horizontal line, then the cursor jumps over it,
  * except a case when above this line there are no more cells.
  */
 void cursor_move_up(Plane *plane) {
@@ -265,8 +265,8 @@ void cursor_move_up(Plane *plane) {
 }
 
 /*
- * Moves cursor one cell down.
- * If the cell below contains a vertical line, then the cursor jumps over it,
+ * Moves cursor one box down.
+ * If the box below contains a vertical line, then the cursor jumps over it,
  * except a case when below this line there are no more cells.
  */
 void cursor_move_down(Plane *plane) {

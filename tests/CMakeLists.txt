@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 set(CMAKE_C_STANDARD 99)
 
 set(APP_SOURCES
-  ../src/cell.c
-  ../src/cell.h
+  ../src/box.c
+  ../src/box.h
   ../src/plane.c
   ../src/plane.h)
 
