@@ -16,6 +16,16 @@ bool assert_true(bool actual) {
   }
 }
 
+bool assert_false(bool actual) {
+  if (!actual) {
+    return true;
+  } else {
+    printf("expected = false\n");
+    printf("  actual = true\n");
+    return false;
+  }
+}
+
 bool assert_equal_string(char *expected, char *actual) {
   if (strcmp(expected, actual) == 0) {
     return true;
