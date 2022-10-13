@@ -44,6 +44,8 @@ void display_plane_attributes(const Plane *plane);
 /* Prints the pointers of all boxes to standard output. */
 void display_plane_pointers(const Plane *plane);
 
+void fix_vert_pointers(const Plane *plane);
+
 /* Returns the total number of characters in plane. */
 size_t plane_len(const Plane *plane);
 

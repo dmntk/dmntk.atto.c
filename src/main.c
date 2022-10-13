@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <locale.h>
+#include <time.h>
+#include <stdio.h>
 
 #include "plane.h"
 #include "box.h"
@@ -9,7 +11,7 @@
  */
 int main() {
   setlocale(LC_ALL, "");
-  Plane *plane = load_plane_from_file("./examples/e1.dtb");
+  Plane *plane = load_plane_from_file("./examples/e2.dtb");
   if (plane == NULL) return EXIT_FAILURE;
   plane_init(plane);
   cursor_init(plane);
@@ -20,11 +22,28 @@ int main() {
   cursor_move_down(plane);
   insert_char(plane, L'A');
   insert_char(plane, L'B');
+
+  struct timespec begin, end;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &begin);
+  insert_char(plane, L'B');
+  clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+
+
+  printf("Total time = %f ns\n", ((double) (end.tv_nsec - begin.tv_nsec)));
+
+  clock_gettime(CLOCK_MONOTONIC_RAW, &begin);
+  fix_vert_pointers(plane);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+
   display_plane_pointers(plane);
+
+  printf("Total time = %f ns\n", ((double) (end.tv_nsec - begin.tv_nsec)));
+
   cursor_move_up(plane);
   for (int i = 0; i < 49; ++i) insert_char(plane, L'X');
   // display_plane(plane);
 
   delete_plane(plane);
+
   return EXIT_SUCCESS;
 }

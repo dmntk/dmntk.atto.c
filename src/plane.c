@@ -222,6 +222,32 @@ void display_plane_pointers(const Plane *plane) {
   }
 }
 
+void fix_vert_pointers(const Plane *plane) {
+  Box *box, *box_below;
+  Box *row = plane->start;
+  Box *row_below = row != NULL ? row->down : NULL;
+  while (row != NULL && row_below != NULL) {
+    box = row;
+    box_below = row_below;
+    while (box != NULL && box_below != NULL) {
+      box->down = box_below;
+      box_below->up = box;
+      box = box->right;
+      box_below = box_below->right;
+    }
+    while (box != NULL) {
+      box->down = NULL;
+      box = box->right;
+    }
+    while (box_below != NULL) {
+      box_below->up = NULL;
+      box_below = box_below->right;
+    }
+    row = row_below;
+    row_below = row_below->down;
+  }
+}
+
 /*
  * Returns the total number of characters in plane,
  * including additional newline characters for each row.
