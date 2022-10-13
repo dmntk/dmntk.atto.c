@@ -59,4 +59,7 @@ void cursor_move_up(Plane *plane);
 /* Moves cursor one box down. */
 void cursor_move_down(Plane *plane);
 
+/* Inserts a character at the current cursor position. */
+void insert_char(Plane *plane, wchar_t ch);
+
 #endif // PLANE_PLANE_H

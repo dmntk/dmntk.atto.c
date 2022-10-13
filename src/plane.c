@@ -280,3 +280,12 @@ void cursor_move_down(Plane *plane) {
     }
   }
 }
+
+/*
+ * Inserts a character at the current cursor position.
+ * Starting from current cursor position, all characters in the cell are shifted to the right.
+ * If there is no enough space for a new character, the cell is appended with one additional whitespace.
+ * All cells in the same column of the table are also appended with a single whitespace when needed.
+ */
+void insert_char(Plane *plane, wchar_t ch) {
+}
