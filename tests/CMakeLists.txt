@@ -23,8 +23,8 @@ set(TEST_SOURCES
 
 add_executable(${PROJECT_NAME} ${APP_SOURCES} ${TEST_SOURCES})
 
-add_test(NAME tcDisplay COMMAND plane_tests tcDisplay ${CMAKE_SOURCE_DIR})
-add_test(NAME tcCursorInit COMMAND plane_tests tcCursorInit ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_display     COMMAND ${PROJECT_NAME} tc_display     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME tc_cursor_init COMMAND ${PROJECT_NAME} tc_cursor_init WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 
 

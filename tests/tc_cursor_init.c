@@ -3,14 +3,11 @@
 #include "../src/plane.h"
 
 #include "assertions.h"
-#include "utils.h"
 #include "tc_cursor_init.h"
 
-int tc_cursor_init(const char dir[]) {
+int tc_cursor_init() {
   // load input
-  char *input_file_name = concat(dir, "/examples/e1.dtb");
-  Plane *plane = load_plane_from_file(input_file_name);
-  free(input_file_name);
+  Plane *plane = load_plane_from_file("./examples/e1.dtb");
   if (plane == NULL) return ASSERT_RESULT_FAILURE;
   // evaluate tested functionality
   cursor_init(plane);

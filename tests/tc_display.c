@@ -6,19 +6,15 @@
 #include "utils.h"
 #include "tc_display.h"
 
-int tc_display(const char dir[]) {
+int tc_display() {
   // load input
-  char *input_file_name = concat(dir, "/examples/e1.dtb");
-  Plane *plane = load_plane_from_file(input_file_name);
-  free(input_file_name);
+  Plane *plane = load_plane_from_file("./examples/e1.dtb");
   if (plane == NULL) return ASSERT_RESULT_FAILURE;
   // evaluate tested functionality
   wchar_t *actual = plane_to_string(plane);
   delete_plane(plane);
   // load expected output
-  char *output_file_name = concat(dir, "/tests/expected/tc_display/e001.dtb");
-  wchar_t * expected = load(output_file_name);
-  free(output_file_name);
+  wchar_t * expected = load("./tests/expected/tc_display/e001.dtb");
   if (expected == NULL) return ASSERT_RESULT_FAILURE;
   // compare results
   bool result = EQUAL_WIDE_STRING(expected, actual);

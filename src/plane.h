@@ -17,8 +17,8 @@ typedef struct Plane_t {
  * corner of the plane.
  */
 typedef struct CursorPos_t {
-  size_t row;  // Index of the row.
-  size_t col;  // index of the column.
+  size_t row;  // row index
+  size_t col;  // col index
 } CursorPos;
 
 /* Creates a new empty plane. */

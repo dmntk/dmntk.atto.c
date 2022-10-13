@@ -7,15 +7,27 @@
 #include "tc_display.h"
 #include "tc_cursor_init.h"
 
-#define MATCH_NAME(actual, expected) (strcmp(actual, expected) == 0)
+#define OUTPUT(s) #s
+#define STRINGIFY(s) OUTPUT(s)
+#define EQUALS(s1,s2) strcmp(s1, s2) == 0
+#define RUN_MATCHED(name, test_name) if (EQUALS(name, STRINGIFY(test_name))) return test_name()
+#define RUN(test_name) if (test_name() == ASSERT_RESULT_FAILURE) return ASSERT_RESULT_FAILURE
+
+/*
+ * Run all test cases.
+ */
+int run_all() {
+  RUN(tc_display);
+  RUN(tc_cursor_init);
+  return ASSERT_RESULT_SUCCESS;
+}
 
 /*
  * Run a test case with specified name.
  */
-int run_test_case(const char name[], const char dir[]) {
-  if MATCH_NAME(name, TC_DISPLAY) return tc_display(dir);
-  if MATCH_NAME(name, TC_CURSOR_INIT) return tc_cursor_init(dir);
-
+int run_test_case(const char name[]) {
+  RUN_MATCHED(name, tc_display);
+  RUN_MATCHED(name, tc_cursor_init);
   printf("\nERROR: Unknown test case name: %s", name);
   return ASSERT_RESULT_FAILURE;
 }
@@ -25,8 +37,9 @@ int run_test_case(const char name[], const char dir[]) {
  */
 int main(const int argc, const char *argv[]) {
   setlocale(LC_ALL, "");
-  if (argc == 3) {
-    switch (run_test_case(argv[1], argv[2])) {
+  if (argc == 2) {
+    if (EQUALS(argv[1], "all")) return run_all();
+    switch (run_test_case(argv[1])) {
       case ASSERT_RESULT_SUCCESS:
         return EXIT_SUCCESS;
       case ASSERT_RESULT_FAILURE:
