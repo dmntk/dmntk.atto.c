@@ -1,5 +1,6 @@
-#include <malloc.h>
 #include <errno.h>
+#include <malloc.h>
+#include <stdbool.h>
 #include <wchar.h>
 
 #include "plane.h"
@@ -7,14 +8,46 @@
 
 #define LOAD_BUFFER_SIZE 5000
 
+#define MOVE_TO_VERT_LINE_LEFT(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_LEFT(box->right->ch)) box = box->right
+#define MOVE_TO_VERT_LINE_CROSSING(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_CROSSING(box->right->ch)) box = box->right
+
 /*
  * Creates a new empty plane.
  */
-Plane *new_plane() {
+Plane *plane_new() {
   Plane *plane = malloc(sizeof(Plane));
   plane->start = NULL;
   plane->cursor = NULL;
   return plane;
+}
+
+/*
+ * Initializes a plane.
+ */
+void plane_init(Plane *plane) {
+  if (plane->start == NULL) return;
+  Box *row = plane->start; // points currently processed row
+  Box *current; // points currently processed box
+  bool is_join; // flag indicating if the current row is the join between information item name and the body of the table
+  while (row != NULL) {
+    current = row;
+    is_join = false;
+    while (current != NULL) {
+      if (IS_TOP_JOIN(current->ch)) {
+        is_join = true;
+        break;
+      }
+      current = current->right;
+    }
+    if (is_join) {
+      current = row;
+      while (current != NULL) {
+        current->attr |= ATTR_JOIN;
+        current = current->right;
+      }
+    }
+    row = row->down;
+  }
 }
 
 /*
@@ -29,12 +62,12 @@ Plane *load_plane_from_file(const char file_name[]) {
   }
   errno = 0;
   Box *row = NULL, *row_tail = NULL, *current = NULL;
-  Plane *plane = new_plane();
+  Plane *plane = plane_new();
   while (fgetws(buffer, LOAD_BUFFER_SIZE, f) != NULL) {
     int i = 0;
     while (buffer[i] != 0) {
       if (buffer[i] != '\n') {
-        current = new_box(buffer[i]);
+        current = box_new(buffer[i]);
         if (row == NULL) {
           row = current;
           row_tail = current;
@@ -71,6 +104,7 @@ Plane *load_plane_from_file(const char file_name[]) {
   fclose(f);
   return plane;
 }
+
 
 /*
  * Deletes the plane.
@@ -121,7 +155,23 @@ void display_plane(const Plane *plane) {
   while (row != NULL) {
     current = row;
     while (current != NULL) {
-      printf("%lc", current->content);
+      printf("%lc", current->ch);
+      current = current->right;
+    }
+    printf("\n");
+    row = row->down;
+  }
+}
+
+/*
+ * Prints the attributes of all boxes of the plane to standard output.
+ */
+void display_plane_attributes(const Plane *plane) {
+  Box *current = NULL, *row = plane->start;
+  while (row != NULL) {
+    current = row;
+    while (current != NULL) {
+      if (current->attr & ATTR_JOIN) printf("J"); else printf("-");
       current = current->right;
     }
     printf("\n");
@@ -160,7 +210,7 @@ wchar_t *plane_to_string(const Plane *plane) {
   while (row != NULL) {
     current = row;
     while (current != NULL) {
-      *pos++ = current->content;
+      *pos++ = current->ch;
       current = current->right;
     }
     row = row->down;
@@ -220,8 +270,8 @@ CursorPos cursor_pos(Plane *plane) {
  */
 void cursor_move_right(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->right != NULL) {
-    if IS_VERT_LINE(plane->cursor->right->content) {
-      if (plane->cursor->right->right != NULL && !IS_VERT_LINE(plane->cursor->right->right->content)) {
+    if IS_VERT_LINE(plane->cursor->right->ch) {
+      if (plane->cursor->right->right != NULL && !IS_VERT_LINE(plane->cursor->right->right->ch)) {
         plane->cursor = plane->cursor->right->right;
       }
     } else {
@@ -237,8 +287,8 @@ void cursor_move_right(Plane *plane) {
  */
 void cursor_move_left(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->left != NULL) {
-    if IS_VERT_LINE(plane->cursor->left->content) {
-      if (plane->cursor->left->left != NULL && !IS_VERT_LINE(plane->cursor->left->left->content)) {
+    if IS_VERT_LINE(plane->cursor->left->ch) {
+      if (plane->cursor->left->left != NULL && !IS_VERT_LINE(plane->cursor->left->left->ch)) {
         plane->cursor = plane->cursor->left->left;
       }
     } else {
@@ -254,8 +304,8 @@ void cursor_move_left(Plane *plane) {
  */
 void cursor_move_up(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->up != NULL) {
-    if IS_HORZ_LINE(plane->cursor->up->content) {
-      if (plane->cursor->up->up != NULL && !IS_HORZ_LINE(plane->cursor->up->up->content)) {
+    if IS_HORZ_LINE(plane->cursor->up->ch) {
+      if (plane->cursor->up->up != NULL && !IS_HORZ_LINE(plane->cursor->up->up->ch)) {
         plane->cursor = plane->cursor->up->up;
       }
     } else {
@@ -271,8 +321,8 @@ void cursor_move_up(Plane *plane) {
  */
 void cursor_move_down(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->down != NULL) {
-    if IS_HORZ_LINE(plane->cursor->down->content) {
-      if (plane->cursor->down->down != NULL && !IS_HORZ_LINE(plane->cursor->down->down->content)) {
+    if IS_HORZ_LINE(plane->cursor->down->ch) {
+      if (plane->cursor->down->down != NULL && !IS_HORZ_LINE(plane->cursor->down->down->ch)) {
         plane->cursor = plane->cursor->down->down;
       }
     } else {
@@ -288,4 +338,51 @@ void cursor_move_down(Plane *plane) {
  * All cells in the same column of the table are also appended with a single whitespace when needed.
  */
 void insert_char(Plane *plane, wchar_t ch) {
+  if (plane->cursor == NULL) return;
+  Box *current = plane->cursor;
+  Box *row;
+  Box *box;
+  // move to the right (sic!) until left (sic!) vertical line is encountered
+  MOVE_TO_VERT_LINE_LEFT(current);
+  if (IS_WHITESPACE(current->ch) && current != plane->cursor) {
+    // there is a whitespace before the vertical line,
+    // all characters from starting from cursor may be simply shifted right
+    while (current != plane->cursor) {
+      current->ch = current->left->ch;
+      current = current->left;
+    }
+    // new character replaces the character under the cursor
+    current->ch = ch;
+  } else {
+    // There is no whitespace before the vertical line or
+    // the cursor is placed just before the vertical line.
+    // A column of whitespaces must be inserted before the vertical line.
+    row = current;
+    while (row->up != NULL && !IS_JOIN(row->attr)) {
+      row = row->up;
+    }
+    while (row != NULL) {
+      box = row;
+      MOVE_TO_VERT_LINE_CROSSING(box);
+      wchar_t new_char = WS;
+      if IS_SINGLE_VERT_LINE_CROSSING(box->right->ch) new_char = SINGLE_HORZ_LINE;
+      if IS_DOUBLE_VERT_LINE_CROSSING(box->right->ch) new_char = DOUBLE_HORZ_LINE;
+      Box *ws = box_new(new_char);
+      ws->left = box;
+      ws->right = box->right;
+      box->right->left = ws;
+      box->right = ws;
+      if (row->down != NULL && IS_JOIN(row->down->attr)) break;
+      row = row->down;
+    }
+    // shift all characters the in current line to the right
+    box = current;
+    MOVE_TO_VERT_LINE_LEFT(box);
+    while (box != current) {
+      box->ch = box->left->ch;
+      box = box->left;
+    }
+    // new character replaces the character under the cursor
+    current->ch = ch;
+  }
 }

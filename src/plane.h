@@ -21,7 +21,10 @@ typedef struct CursorPos_t {
 } CursorPos;
 
 /* Creates a new empty plane. */
-Plane *new_plane();
+Plane *plane_new();
+
+/* Initializes a plane. */
+void plane_init(Plane *plane);
 
 /* Loads a plane from file. */
 Plane *load_plane_from_file(const char file_name[]);
@@ -34,6 +37,9 @@ void append_row(Plane *plane, Box *row);
 
 /* Prints the content of the plane to standard output. */
 void display_plane(const Plane *plane);
+
+/* Prints the attributes of all boxes of the plane to standard output. */
+void display_plane_attributes(const Plane *plane);
 
 /* Returns the total number of characters in plane. */
 size_t plane_len(const Plane *plane);

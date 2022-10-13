@@ -5,9 +5,10 @@
 /*
  * Creates a new box initialized with specified character.
  */
-Box *new_box(wchar_t ch) {
+Box *box_new(wchar_t ch) {
   Box *box = malloc(sizeof(Box));
-  box->content = ch;
+  box->ch = ch;
+  box->attr = ATTR_CLEAR;
   box->up = NULL;
   box->right = NULL;
   box->down = NULL;
