@@ -8,8 +8,6 @@
 
 /*
  * Creates a new empty plane.
- *
- * Returns: A pointer to newly created plane.
  */
 Plane *new_plane() {
   Plane *plane = malloc(sizeof(Plane));
@@ -151,8 +149,6 @@ size_t plane_len(const Plane *plane) {
 
 /*
  * Returns the content of the plane as a string of characters.
- * This function allocates required buffer for storing the content.
- * The caller is responsible for deallocating this buffer.
  */
 wchar_t *plane_to_string(const Plane *plane) {
   size_t len = plane_len(plane);
