@@ -14,3 +14,9 @@ set(SOURCES
   glyphs.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
+
+set(CURSES_NEED_WIDE TRUE)
+
+find_package(Curses REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} ncurses)
