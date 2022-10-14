@@ -11,7 +11,9 @@ set(SOURCES
   plane.c
   plane.h
   glyphs.c
-  glyphs.h)
+  glyphs.h
+  editor.c
+  editor.h actions.c actions.h)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

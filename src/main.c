@@ -1,27 +1,40 @@
 #include <locale.h>
-#include <ncurses.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
 
-#include "plane.h"
-#include "box.h"
+#include "actions.h"
+#include "editor.h"
+
+/* Opens a file to edit. */
+void edit_file(const char file_name[static 1]) {
+  Editor *editor;
+  if ((editor = editor_new(file_name)) == NULL) return;
+  editor_delete(editor);
+}
 
 /*
  * Main entrypoint of the application.
  */
-int main() {
-  setlocale(LC_ALL, "en_US.UTF-8");
+int main(int argc, char *argv[]) {
+  setlocale(LC_ALL, ""); // crucial
+  struct Action action = get_action(argc, argv);
+  switch (action.type) {
+    case EditFile:
+      edit_file(action.file_name);
+      break;
+    default:
+      break;
+  }
 
-  WINDOW *w = initscr();                     /* Start curses mode 		  */
-  raw();
-  keypad(w, true);
-  noecho();
-
-  addstr("Hello World !!!");     /* Print Hello World		  */
-  refresh();                     /* Print it on to the real screen */
-  getch();                       /* Wait for user input */
-  endwin();                      /* End curses mode		  */
+//
+//  WINDOW *w = initscr();                     /* Start curses mode 		  */
+//  raw();
+//  keypad(w, true);
+//  noecho();
+//
+//  addstr("Hello World !!!");     /* Print Hello World		  */
+//  refresh();                     /* Print it on to the real screen */
+//  getch();                       /* Wait for user input */
+//  endwin();                      /* End curses mode		  */
 
 
 

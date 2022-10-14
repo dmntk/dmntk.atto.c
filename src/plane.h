@@ -27,7 +27,7 @@ Plane *plane_new();
 void plane_init(Plane *plane);
 
 /* Loads a plane from file. */
-Plane *load_plane_from_file(const char file_name[]);
+Plane *load_plane_from_file(const char file_name[static 1]);
 
 /* Deletes the plane. */
 void delete_plane(Plane *plane);

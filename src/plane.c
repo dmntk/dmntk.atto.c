@@ -64,7 +64,7 @@ Plane *load_plane_from_file(const char file_name[]) {
   FILE *f;
   wchar_t buffer[LOAD_BUFFER_SIZE];
   if ((f = fopen(file_name, "r")) == NULL) {
-    fprintf(stderr, "failed to open file: %s", file_name);
+    fprintf(stderr, "failed to open file: %s\n", file_name);
     return NULL;
   }
   errno = 0;
@@ -97,13 +97,13 @@ Plane *load_plane_from_file(const char file_name[]) {
     }
   }
   if (errno == EILSEQ) {
-    fprintf(stderr, "an invalid wide character was encountered");
+    fprintf(stderr, "an invalid wide character was encountered\n");
     fclose(f);
     delete_plane(plane);
     return NULL;
   }
   if (!feof(f)) {
-    fprintf(stderr, "file read error");
+    fprintf(stderr, "file read error\n");
     fclose(f);
     delete_plane(plane);
     return NULL;
