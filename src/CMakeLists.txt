@@ -12,13 +12,16 @@ set(SOURCES
   plane.h
   glyphs.c
   glyphs.h
+  actions.c
+  actions.h
   editor.c
-  editor.h actions.c actions.h)
+  editor.h)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-
+set(CURSES_NEED_NCURSESW TRUE)
 set(CURSES_NEED_WIDE TRUE)
 
 find_package(Curses REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} ncurses)
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARIES})

@@ -17,4 +17,7 @@ Editor *editor_new(const char file_name[static 1]);
 /* Deletes the editor. */
 void editor_delete(Editor *editor);
 
+/* Starts editing. */
+void editor_run(Editor *editor);
+
 #endif // PLANE_EDITOR_H

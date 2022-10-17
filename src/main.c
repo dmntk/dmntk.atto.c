@@ -8,6 +8,7 @@
 void edit_file(const char file_name[static 1]) {
   Editor *editor;
   if ((editor = editor_new(file_name)) == NULL) return;
+  editor_run(editor);
   editor_delete(editor);
 }
 

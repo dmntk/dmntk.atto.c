@@ -47,3 +47,33 @@ void editor_delete(Editor *editor) {
   free(editor);
 }
 
+/* Repaints the plane. */
+void repaint_plane(Editor *editor) {
+  Box *box, *row = editor->plane->start;
+  int row_index = 0, col_index = 0;
+  while (row != NULL) {
+    box = row;
+    while (box != NULL) {
+      move(row_index, col_index);
+      addch(L'╥');
+      box = box->right;
+      col_index++;
+    }
+    row = row->down;
+    row_index++;
+    col_index = 0;
+  }
+}
+
+/* Processes keystrokes. */
+void process_keystrokes(Editor *editor) {
+  getch();
+}
+
+/*
+ * Starts editing.
+ */
+void editor_run(Editor *editor) {
+  repaint_plane(editor);
+  process_keystrokes(editor);
+}
