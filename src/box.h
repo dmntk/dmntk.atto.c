@@ -12,12 +12,12 @@
  * Box containing a single character.
  */
 typedef struct Box_t {
-  wchar_t ch;            // the character stored in this box
+  wchar_t ch;            // the character stored in box
   unsigned short attr;   // additional box attributes
-  struct Box_t *left;    // points a box to the left from this box
-  struct Box_t *right;   // points a box to the right from this box
-  struct Box_t *up;      // points a box above this box
-  struct Box_t *down;    // points a box below this box
+  struct Box_t *left;    // points a box to the left from current box
+  struct Box_t *right;   // points a box to the right from current box
+  struct Box_t *up;      // points a box above current box
+  struct Box_t *down;    // points a box below current box
 } Box;
 
 Box *box_new(wchar_t ch);

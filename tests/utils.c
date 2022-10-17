@@ -9,7 +9,7 @@
 wchar_t *load(const char file_name[]) {
   FILE *f;
   wchar_t buffer[BLOCK_SIZE];
-  wchar_t* content = calloc(sizeof(wchar_t), BLOCK_SIZE);
+  wchar_t *content = calloc(sizeof(wchar_t), BLOCK_SIZE);
   size_t capacity = BLOCK_SIZE; // total capacity of the allocated string
   size_t size = 0; // current size of the allocated string
   size_t len;      // length of the block read from file
@@ -21,7 +21,7 @@ wchar_t *load(const char file_name[]) {
     len = wcslen(buffer);
     if ((capacity - size) <= len) {
       capacity += BLOCK_SIZE;
-      content = (wchar_t*)realloc(content, sizeof(wchar_t) * capacity);
+      content = (wchar_t *) realloc(content, sizeof(wchar_t) * capacity);
     }
     wcscat(content, buffer);
     size = wcslen(content);

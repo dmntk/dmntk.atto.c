@@ -17,10 +17,12 @@ set(SOURCES
   editor.c
   editor.h)
 
-set(CURSES_NEED_NCURSESW TRUE)
 set(CURSES_NEED_WIDE TRUE)
+set(CURSES_NEED_NCURSES TRUE)
 
 find_package(Curses REQUIRED)
+
+include_directories(${CURSES_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

@@ -14,7 +14,7 @@ int tc_display() {
   wchar_t *actual = plane_to_string(plane);
   delete_plane(plane);
   // load expected output
-  wchar_t * expected = load("./tests/expected/tc_display/e001.dtb");
+  wchar_t *expected = load("./tests/expected/tc_display/e001.dtb");
   if (expected == NULL) return ASSERT_RESULT_FAILURE;
   // compare results
   bool result = EQUAL_WIDE_STRING(expected, actual);

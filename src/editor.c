@@ -1,3 +1,5 @@
+#define NCURSES_WIDECHAR 1
+
 #include <locale.h>
 #include <ncurses.h>
 
@@ -54,8 +56,7 @@ void repaint_plane(Editor *editor) {
   while (row != NULL) {
     box = row;
     while (box != NULL) {
-      move(row_index, col_index);
-      addch(L'╥');
+      mvaddnwstr(row_index, col_index, &box->ch, 1);
       box = box->right;
       col_index++;
     }
