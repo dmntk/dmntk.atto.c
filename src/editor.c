@@ -170,6 +170,7 @@ void process_keystrokes(Editor *editor) {
         insert_char(editor->plane, editor_action.ch);
         fix_vert_pointers(editor->plane);
         repaint_plane(editor);
+        cursor_move_right(editor->plane);
         update_cursor(editor);
         refresh();
         break;
