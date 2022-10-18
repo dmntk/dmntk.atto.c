@@ -6,14 +6,16 @@
 
 #include "editor.h"
 
+#define MATCH_KEY_NAME(actual, expected) (strcmp(actual, expected) == 0)
+
 /*
  * Keystroke definitions.
  */
-#define KN_CTRL_Q  "^Q"
-#define KN_DOWN    "KEY_DOWN"
-#define KN_LEFT    "KEY_LEFT"
-#define KN_RIGHT   "KEY_RIGHT"
-#define KN_UP      "KEY_UP"
+#define KEY_NAME_CTRL_Q  "^Q"
+#define KEY_NAME_DOWN    "KEY_DOWN"
+#define KEY_NAME_LEFT    "KEY_LEFT"
+#define KEY_NAME_RIGHT   "KEY_RIGHT"
+#define KEY_NAME_UP      "KEY_UP"
 
 //#define KN_END     "KEY_END"
 
@@ -117,19 +119,19 @@ void update_cursor(Editor *editor) {
 EditorAction map_key_to_editor_action(int ch) {
   const char *key_name = keyname(ch);
   if (key_name != NULL) {
-    if (strcmp(key_name, KN_CTRL_Q) == 0) {
+    if MATCH_KEY_NAME(key_name, KEY_NAME_CTRL_Q) {
       return (EditorAction) {.type = Quit, .ch = 0};
     }
-    if (strcmp(key_name, KN_RIGHT) == 0) {
+    if MATCH_KEY_NAME(key_name, KEY_NAME_RIGHT) {
       return (EditorAction) {.type = CursorMoveRight, .ch = 0};
     }
-    if (strcmp(key_name, KN_LEFT) == 0) {
+    if MATCH_KEY_NAME(key_name, KEY_NAME_LEFT) {
       return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
     }
-    if (strcmp(key_name, KN_UP) == 0) {
+    if MATCH_KEY_NAME(key_name, KEY_NAME_UP) {
       return (EditorAction) {.type = CursorMoveUp, .ch = 0};
     }
-    if (strcmp(key_name, KN_DOWN) == 0) {
+    if MATCH_KEY_NAME(key_name, KEY_NAME_DOWN) {
       return (EditorAction) {.type = CursorMoveDown, .ch = 0};
     }
   }

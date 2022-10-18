@@ -8,8 +8,8 @@
 
 #define LOAD_BUFFER_SIZE 5000
 
-#define MOVE_TO_VERT_LINE_LEFT(box) while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
-#define MOVE_TO_VERT_LINE_CROSSING(box) while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
+#define move_to_vert_line_left(box)      while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
+#define move_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
 
 #define C_RED     "\x001b[31m"
 #define C_YELLOW  "\x001b[33m"
@@ -70,7 +70,7 @@ Plane *load_plane_from_file(const char file_name[]) {
   errno = 0;
   Box *row = NULL, *row_tail = NULL, *current = NULL;
   Plane *plane = plane_new();
-  while (fgetws(buffer, LOAD_BUFFER_SIZE, f) != NULL) {
+  while (fgetws(buffer, LOAD_BUFFER_SIZE - 1, f) != NULL) {
     int i = 0;
     while (buffer[i] != 0) {
       if (buffer[i] != '\n') {
@@ -417,19 +417,16 @@ void insert_char(Plane *plane, wchar_t ch) {
   Box *row;
   Box *box;
   // move to the right (sic!) until left (sic!) vertical line is encountered
-  MOVE_TO_VERT_LINE_LEFT(current);
+  move_to_vert_line_left(current);
   if (is_whitespace(current->ch) && current != plane->cursor) {
     // there is a whitespace before the vertical line,
-    // all characters from starting from cursor may be simply shifted right
+    // all characters starting from current cursor position may be simply shifted right
     while (current != plane->cursor) {
       current->ch = current->left->ch;
       current = current->left;
     }
-    // new character replaces the character under the cursor
-    current->ch = ch;
   } else {
-    // There is no whitespace before the vertical line or
-    // the cursor is placed just before the vertical line.
+    // There is no whitespace before the vertical line or the cursor is placed just before the vertical line.
     // A column of whitespaces must be inserted before the vertical line.
     row = current;
     while (row->up != NULL && !IS_JOIN(row->attr)) {
@@ -437,7 +434,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     }
     while (row != NULL) {
       box = row;
-      MOVE_TO_VERT_LINE_CROSSING(box);
+      move_to_vert_line_crossing(box);
       wchar_t new_char = WS;
       if is_single_vert_line_crossing(box->right->ch) new_char = SINGLE_HORZ_LINE;
       if is_double_vert_line_crossing(box->right->ch) new_char = DOUBLE_HORZ_LINE;
@@ -446,17 +443,18 @@ void insert_char(Plane *plane, wchar_t ch) {
       ws->right = box->right;
       box->right->left = ws;
       box->right = ws;
+      ws->attr = box->attr;
       if (row->down != NULL && IS_JOIN(row->down->attr)) break;
       row = row->down;
     }
-    // shift all characters the in current line to the right
-    box = current;
-    MOVE_TO_VERT_LINE_LEFT(box);
-    while (box != current) {
+    // shift all characters the in the current line to the right
+    box = plane->cursor;
+    move_to_vert_line_left(box);
+    while (box != plane->cursor) {
       box->ch = box->left->ch;
       box = box->left;
     }
-    // new character replaces the character under the cursor
-    current->ch = ch;
   }
+  // new character replaces the character under the cursor
+  plane->cursor->ch = ch;
 }

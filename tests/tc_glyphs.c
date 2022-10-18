@@ -33,13 +33,13 @@ int tc_glyphs() {
   ASSERT_FALSE(is_horz_line_top(L'║'));
 
   // plain horizontal line seen from the bottom side
-  ASSERT_TRUE(is_horz_line_top(L'─'));
-  ASSERT_TRUE(is_horz_line_top(L'┴'));
-  ASSERT_TRUE(is_horz_line_top(L'╨'));
-  ASSERT_TRUE(is_horz_line_top(L'═'));
-  ASSERT_TRUE(is_horz_line_top(L'╧'));
-  ASSERT_FALSE(is_horz_line_top(L'│'));
-  ASSERT_FALSE(is_horz_line_top(L'║'));
+  ASSERT_TRUE(is_horz_line_bottom(L'─'));
+  ASSERT_TRUE(is_horz_line_bottom(L'┴'));
+  ASSERT_TRUE(is_horz_line_bottom(L'╨'));
+  ASSERT_TRUE(is_horz_line_bottom(L'═'));
+  ASSERT_TRUE(is_horz_line_bottom(L'╧'));
+  ASSERT_FALSE(is_horz_line_bottom(L'│'));
+  ASSERT_FALSE(is_horz_line_bottom(L'║'));
 
   return ASSERT_RESULT_SUCCESS;
 }
