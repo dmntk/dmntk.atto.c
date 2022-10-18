@@ -16,7 +16,7 @@ void edit_file(const char file_name[static 1]) {
  * Main entrypoint of the application.
  */
 int main(int argc, char *argv[]) {
-  setlocale(LC_ALL, ""); // crucial
+  setlocale(LC_ALL, "");
   struct Action action = get_action(argc, argv);
   switch (action.type) {
     case EditFile:

@@ -291,9 +291,10 @@ wchar_t *plane_to_string(const Plane *plane) {
 
 /*
  * Initializes cursor position.
- * This function tries to position a cursor right below/right the top-left corner,
- * when the plane is not empty and contains minimum two rows and two columns,
+ * This function tries to position a cursor below to the right of the top-left corner of the table.
+ * When the plane is not empty and contains minimum two rows and two columns,
  * then the starting cursor position is set to row = 1 and col = 1.
+ * Otherwise, row = 0 and col = 0 are returned.
  */
 Position cursor_init(Plane *plane) {
   size_t row = 0, col = 0;
@@ -310,7 +311,11 @@ Position cursor_init(Plane *plane) {
   } else {
     plane->cursor = NULL;
   }
-  return (Position) {.row = row, .col = col};
+  if (row == 1 && col == 1) {
+    return (Position) {.row = 1, .col = 1};
+  } else {
+    return (Position) {.row = 0, .col = 0};
+  }
 }
 
 /*
