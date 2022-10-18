@@ -168,6 +168,7 @@ void process_keystrokes(Editor *editor) {
         break;
       case InsertChar:
         insert_char(editor->plane, editor_action.ch);
+        fix_vert_pointers(editor->plane);
         repaint_plane(editor);
         update_cursor(editor);
         refresh();

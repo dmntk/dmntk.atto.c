@@ -8,8 +8,8 @@
 
 #define LOAD_BUFFER_SIZE 5000
 
-#define MOVE_TO_VERT_LINE_LEFT(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_LEFT(box->right->ch)) box = box->right
-#define MOVE_TO_VERT_LINE_CROSSING(box) while (box != NULL && box->right != NULL && !IS_VERT_LINE_CROSSING(box->right->ch)) box = box->right
+#define MOVE_TO_VERT_LINE_LEFT(box) while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
+#define MOVE_TO_VERT_LINE_CROSSING(box) while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
 
 #define C_RED     "\x001b[31m"
 #define C_YELLOW  "\x001b[33m"
@@ -40,7 +40,7 @@ void plane_init(Plane *plane) {
     current = row;
     is_join = false;
     while (current != NULL) {
-      if (IS_TOP_JOIN(current->ch)) {
+      if (is_top_join(current->ch)) {
         is_join = true;
         break;
       }
@@ -344,8 +344,8 @@ Position cursor_pos(Plane *plane) {
  */
 void cursor_move_right(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->right != NULL) {
-    if IS_VERT_LINE(plane->cursor->right->ch) {
-      if (plane->cursor->right->right != NULL && !IS_VERT_LINE(plane->cursor->right->right->ch)) {
+    if is_vert_line_left(plane->cursor->right->ch) {
+      if (plane->cursor->right->right != NULL && !is_box_drawing_character(plane->cursor->right->right->ch)) {
         plane->cursor = plane->cursor->right->right;
       }
     } else {
@@ -361,8 +361,8 @@ void cursor_move_right(Plane *plane) {
  */
 void cursor_move_left(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->left != NULL) {
-    if IS_VERT_LINE(plane->cursor->left->ch) {
-      if (plane->cursor->left->left != NULL && !IS_VERT_LINE(plane->cursor->left->left->ch)) {
+    if is_vert_line_right(plane->cursor->left->ch) {
+      if (plane->cursor->left->left != NULL && !is_box_drawing_character(plane->cursor->left->left->ch)) {
         plane->cursor = plane->cursor->left->left;
       }
     } else {
@@ -378,8 +378,8 @@ void cursor_move_left(Plane *plane) {
  */
 void cursor_move_up(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->up != NULL) {
-    if IS_HORZ_LINE(plane->cursor->up->ch) {
-      if (plane->cursor->up->up != NULL && !IS_HORZ_LINE(plane->cursor->up->up->ch)) {
+    if is_horz_line_bottom(plane->cursor->up->ch) {
+      if (plane->cursor->up->up != NULL && !is_box_drawing_character(plane->cursor->up->up->ch)) {
         plane->cursor = plane->cursor->up->up;
       }
     } else {
@@ -395,8 +395,8 @@ void cursor_move_up(Plane *plane) {
  */
 void cursor_move_down(Plane *plane) {
   if (plane->cursor != NULL && plane->cursor->down != NULL) {
-    if IS_HORZ_LINE(plane->cursor->down->ch) {
-      if (plane->cursor->down->down != NULL && !IS_HORZ_LINE(plane->cursor->down->down->ch)) {
+    if is_horz_line_top(plane->cursor->down->ch) {
+      if (plane->cursor->down->down != NULL && !is_box_drawing_character(plane->cursor->down->down->ch)) {
         plane->cursor = plane->cursor->down->down;
       }
     } else {
@@ -418,7 +418,7 @@ void insert_char(Plane *plane, wchar_t ch) {
   Box *box;
   // move to the right (sic!) until left (sic!) vertical line is encountered
   MOVE_TO_VERT_LINE_LEFT(current);
-  if (IS_WHITESPACE(current->ch) && current != plane->cursor) {
+  if (is_whitespace(current->ch) && current != plane->cursor) {
     // there is a whitespace before the vertical line,
     // all characters from starting from cursor may be simply shifted right
     while (current != plane->cursor) {
@@ -439,8 +439,8 @@ void insert_char(Plane *plane, wchar_t ch) {
       box = row;
       MOVE_TO_VERT_LINE_CROSSING(box);
       wchar_t new_char = WS;
-      if IS_SINGLE_VERT_LINE_CROSSING(box->right->ch) new_char = SINGLE_HORZ_LINE;
-      if IS_DOUBLE_VERT_LINE_CROSSING(box->right->ch) new_char = DOUBLE_HORZ_LINE;
+      if is_single_vert_line_crossing(box->right->ch) new_char = SINGLE_HORZ_LINE;
+      if is_double_vert_line_crossing(box->right->ch) new_char = DOUBLE_HORZ_LINE;
       Box *ws = box_new(new_char);
       ws->left = box;
       ws->right = box->right;
