@@ -25,6 +25,7 @@ typedef enum EditorActionType_t {
   CursorMoveLeft,
   CursorMoveRight,
   CursorMoveUp,
+  InsertChar,
   Nop,
   Quit,
 } EditorActionType;
@@ -34,7 +35,7 @@ typedef enum EditorActionType_t {
  */
 typedef struct EditorAction_t {
   enum EditorActionType_t type; // name of the editor action
-  wchar_t *ch;                // character read from user input
+  wchar_t ch;                   // character read from user input
 } EditorAction;
 
 /*
@@ -131,8 +132,9 @@ EditorAction map_key_to_editor_action(int ch) {
     if (strcmp(key_name, KN_DOWN) == 0) {
       return (EditorAction) {.type = CursorMoveDown, .ch = 0};
     }
-  } else {
-    //
+  }
+  if (ch >= 32 && ch <= 126) {
+    return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
   }
   return (EditorAction) {.type = Nop, .ch = 0};
 }
@@ -161,6 +163,12 @@ void process_keystrokes(Editor *editor) {
         break;
       case CursorMoveDown:
         cursor_move_down(editor->plane);
+        update_cursor(editor);
+        refresh();
+        break;
+      case InsertChar:
+        insert_char(editor->plane, editor_action.ch);
+        repaint_plane(editor);
         update_cursor(editor);
         refresh();
         break;
