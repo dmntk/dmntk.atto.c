@@ -117,19 +117,19 @@ void editor_delete(Editor *editor) {
  * Repaints the plane.
  */
 void repaint_plane(Editor *editor) {
+  werase(editor->window);
   Box *box = NULL, *row = editor->plane->start;
   int x = 0, y = 0, col_count = 0, row_count = 0;
   for (int i = editor->offset_y; i > 0 && row->down != NULL; --i) row = row->down;
   while (row != NULL && row_count < editor->height - 1) {
     box = row;
-    for (int i = editor->offset_x; i > 0 && box->right != NULL; --i) box = box->right;
+    for (int i = editor->offset_x; i > 0 && box != NULL; --i) box = box->right;
     while (box != NULL && col_count < editor->width) {
       mvwaddnwstr(editor->window, y, x, &box->ch, 1);
       box = box->right;
       col_count++;
       x++;
     }
-    if (col_count < editor->width) mvwaddnwstr(editor->window, y, x, WSS, 1);
     row = row->down;
     row_count++;
     col_count = 0;
@@ -290,9 +290,10 @@ void process_keystrokes(Editor *editor) {
         insert_char(editor->plane, editor_action.ch);
         fix_vert_pointers(editor->plane);
         repaint_plane(editor);
-        cursor_move_right(editor->plane);
-        update_cursor(editor);
-        wrefresh(editor->window);
+        action_cursor_move_right(editor);
+        //cursor_move_right(editor->plane);
+        //update_cursor(editor);
+        //wrefresh(editor->window);
         break;
       case Quit:
         return;
