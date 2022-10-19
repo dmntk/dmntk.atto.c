@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "editor.h"
+#include "glyphs.h"
 
 #define match_key(actual, expected) (strcmp(actual, expected) == 0)
 
@@ -16,7 +17,6 @@
 #define KEY_NAME_LEFT    "KEY_LEFT"
 #define KEY_NAME_RIGHT   "KEY_RIGHT"
 #define KEY_NAME_UP      "KEY_UP"
-//#define KN_END     "KEY_END"
 
 #define is_key_resize(key_name)  match_key(key_name, "KEY_RESIZE")
 
@@ -41,6 +41,21 @@ typedef struct EditorAction_t {
   enum EditorActionType_t type; // name of the editor action
   wchar_t ch;                   // character read from user input
 } EditorAction;
+
+/*
+ * Displays debug message.
+ */
+void debug(Editor *editor, const char *format, ...) {
+  char buffer[2000];
+  va_list args;
+  va_start(args, format);
+  vsprintf(buffer, format, args);
+  va_end(args);
+  int x = getcurx(editor->window);
+  int y = getcury(editor->window);
+  mvwaddstr(editor->window, editor->height - 2, 1, buffer);
+  wmove(editor->window, y, x);
+}
 
 /*
  * Initializes the terminal.
@@ -106,6 +121,7 @@ void repaint_plane(Editor *editor) {
       col_count++;
       x++;
     }
+    if (col_count < editor->width) mvwaddnwstr(editor->window, y, x, WSS, 1);
     row = row->down;
     row_count++;
     col_count = 0;
@@ -115,22 +131,35 @@ void repaint_plane(Editor *editor) {
 }
 
 /*
+ * Updates cursor coordinates displayed in status bar.
+ */
+void update_cursor_coordinates(Editor *editor, int cur_pos_x, int cur_pos_y, int x, int y) {
+  char buffer[200];
+  sprintf(buffer, "    %d:%d (%d:%d) [%d:%d] ", cur_pos_x, cur_pos_y, x, y, editor->width, editor->height);
+  int pos_x = editor->width - (int) strlen(buffer);
+  for (int i = 0; i < pos_x; ++i) mvwaddnwstr(editor->window, editor->height - 1, i, WSS, 1);
+  mvwaddstr(editor->window, editor->height - 1, pos_x, buffer);
+}
+
+/*
  * Updates cursor position.
  */
 void update_cursor(Editor *editor) {
   Position cur_pos = cursor_pos(editor->plane);
-  int col = cur_pos.col;
-  if (col >= editor->width - 2) {
-    editor->offset_x = col - editor->width + 1;
-    col = editor->width - 2;
-    repaint_plane(editor);
-  }
-  int row = cur_pos.row;
-//  if (row > editor->height - 1) {
-//    editor->offset_y = row - editor->height + 1;
-//    row = editor->height - 1;
-//  }
-  wmove(editor->window, row, col);
+  int x = cur_pos.col - editor->offset_x;
+  int y = cur_pos.row - editor->offset_y;
+  update_cursor_coordinates(editor, cur_pos.col, cur_pos.row, x, y);
+  wmove(editor->window, y, x);
+}
+
+/*
+ * Updates cursor position.
+ */
+void update_cursor_x(Editor *editor, int cur_pos_x, int cur_pos_y) {
+  int x = cur_pos_x - editor->offset_x;
+  int y = cur_pos_y - editor->offset_y;
+  update_cursor_coordinates(editor, cur_pos_x, cur_pos_y, x, y);
+  wmove(editor->window, y, x);
 }
 
 /*
@@ -172,6 +201,62 @@ EditorAction map_key_to_editor_action(int ch) {
 }
 
 /*
+ * Action that performs moving cursor to the right.
+ */
+void action_cursor_move_right(Editor *editor) {
+  cursor_move_right(editor->plane);
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.col - editor->offset_x > editor->width - 2) {
+    editor->offset_x = cur_pos.col - editor->width + 2;
+    repaint_plane(editor);
+  }
+  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  wrefresh(editor->window);
+}
+
+/*
+ * Action that performs moving cursor to the left.
+ */
+void action_cursor_move_left(Editor *editor) {
+  cursor_move_left(editor->plane);
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.col - editor->offset_x < 1) {
+    editor->offset_x = cur_pos.col - 1;
+    repaint_plane(editor);
+  }
+  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  wrefresh(editor->window);
+}
+
+/*
+ * Action that performs moving cursor down.
+ */
+void action_cursor_move_down(Editor *editor) {
+  cursor_move_down(editor->plane);
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.row - editor->offset_y > editor->height - 3) {
+    editor->offset_y = cur_pos.row - editor->height + 3;
+    repaint_plane(editor);
+  }
+  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  wrefresh(editor->window);
+}
+
+/*
+ * Action that performs moving cursor up.
+ */
+void action_cursor_move_up(Editor *editor) {
+  cursor_move_up(editor->plane);
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.row - editor->offset_y < 1) {
+    editor->offset_y = cur_pos.row - 1;
+    repaint_plane(editor);
+  }
+  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  wrefresh(editor->window);
+}
+
+/*
  * Processes keystrokes.
  */
 void process_keystrokes(Editor *editor) {
@@ -179,24 +264,16 @@ void process_keystrokes(Editor *editor) {
     EditorAction editor_action = map_key_to_editor_action(getch());
     switch (editor_action.type) {
       case CursorMoveRight:
-        cursor_move_right(editor->plane);
-        update_cursor(editor);
-        wrefresh(editor->window);
+        action_cursor_move_right(editor);
         break;
       case CursorMoveLeft:
-        cursor_move_left(editor->plane);
-        update_cursor(editor);
-        wrefresh(editor->window);
-        break;
-      case CursorMoveUp:
-        cursor_move_up(editor->plane);
-        update_cursor(editor);
-        wrefresh(editor->window);
+        action_cursor_move_left(editor);
         break;
       case CursorMoveDown:
-        cursor_move_down(editor->plane);
-        update_cursor(editor);
-        wrefresh(editor->window);
+        action_cursor_move_down(editor);
+        break;
+      case CursorMoveUp:
+        action_cursor_move_up(editor);
         break;
       case InsertChar:
         insert_char(editor->plane, editor_action.ch);

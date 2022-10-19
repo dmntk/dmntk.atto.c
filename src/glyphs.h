@@ -3,6 +3,8 @@
 
 #define WS                               L' '
 
+#define WSS                              L" "
+
 #define SINGLE_HORZ_LINE                 L'─'
 
 #define DOUBLE_HORZ_LINE                 L'═'
