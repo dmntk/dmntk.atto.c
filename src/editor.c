@@ -6,7 +6,7 @@
 
 #include "editor.h"
 
-#define MATCH_KEY_NAME(actual, expected) (strcmp(actual, expected) == 0)
+#define match_key(actual, expected) (strcmp(actual, expected) == 0)
 
 /*
  * Keystroke definitions.
@@ -16,8 +16,9 @@
 #define KEY_NAME_LEFT    "KEY_LEFT"
 #define KEY_NAME_RIGHT   "KEY_RIGHT"
 #define KEY_NAME_UP      "KEY_UP"
-
 //#define KN_END     "KEY_END"
+
+#define is_key_resize(key_name)  match_key(key_name, "KEY_RESIZE")
 
 /*
  * Names of available editor actions.
@@ -30,6 +31,7 @@ typedef enum EditorActionType_t {
   InsertChar,
   Nop,
   Quit,
+  WindowResize
 } EditorActionType;
 
 /*
@@ -70,8 +72,12 @@ Editor *editor_new(const char file_name[static 1]) {
   cursor_init(plane);
   if ((window = initialize_terminal()) == NULL) return NULL;
   editor = malloc(sizeof(Editor));
-  editor->window = window;
   editor->plane = plane;
+  editor->window = window;
+  editor->width = getmaxx(window);
+  editor->height = getmaxy(window);
+  editor->offset_x = 0;
+  editor->offset_y = 0;
   return editor;
 }
 
@@ -88,18 +94,21 @@ void editor_delete(Editor *editor) {
  * Repaints the plane.
  */
 void repaint_plane(Editor *editor) {
-  Box *box, *row = editor->plane->start;
-  int row_index = 0, col_index = 0;
-  while (row != NULL) {
+  Box *box = NULL, *row = editor->plane->start;
+  int row_index = editor->offset_y, col_index = editor->offset_x, col_count = 0, row_count = 0;
+  while (row != NULL && row_count < editor->height - 1) {
     box = row;
-    while (box != NULL) {
-      mvaddnwstr(row_index, col_index, &box->ch, 1);
+    while (box != NULL && col_count < editor->width) {
+      mvwaddnwstr(editor->window, row_index, col_index, &box->ch, 1);
       box = box->right;
       col_index++;
+      col_count++;
     }
     row = row->down;
     row_index++;
+    row_count++;
     col_index = 0;
+    col_count = 0;
   }
 }
 
@@ -110,7 +119,7 @@ void update_cursor(Editor *editor) {
   Position cur_pos = cursor_pos(editor->plane);
   int row = (int) cur_pos.row;
   int col = (int) cur_pos.col;
-  move(row, col);
+  wmove(editor->window, row, col);
 }
 
 /*
@@ -119,25 +128,28 @@ void update_cursor(Editor *editor) {
 EditorAction map_key_to_editor_action(int ch) {
   const char *key_name = keyname(ch);
   if (key_name != NULL) {
-    if MATCH_KEY_NAME(key_name, KEY_NAME_CTRL_Q) {
+    if match_key(key_name, KEY_NAME_CTRL_Q) {
       return (EditorAction) {.type = Quit, .ch = 0};
     }
-    if MATCH_KEY_NAME(key_name, KEY_NAME_RIGHT) {
+    if match_key(key_name, KEY_NAME_RIGHT) {
       return (EditorAction) {.type = CursorMoveRight, .ch = 0};
     }
-    if MATCH_KEY_NAME(key_name, KEY_NAME_LEFT) {
+    if match_key(key_name, KEY_NAME_LEFT) {
       return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
     }
-    if MATCH_KEY_NAME(key_name, KEY_NAME_UP) {
+    if match_key(key_name, KEY_NAME_UP) {
       return (EditorAction) {.type = CursorMoveUp, .ch = 0};
     }
-    if MATCH_KEY_NAME(key_name, KEY_NAME_DOWN) {
+    if match_key(key_name, KEY_NAME_DOWN) {
       return (EditorAction) {.type = CursorMoveDown, .ch = 0};
     }
+    if (is_key_resize(key_name)) return (EditorAction) {.type = WindowResize, .ch = 0};
+    //printf("KEY_NAME = %s ", key_name);
   }
   if (ch >= 32 && ch <= 126) {
     return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
   }
+  //printf("KEY = %d ", ch);
   return (EditorAction) {.type = Nop, .ch = 0};
 }
 
@@ -151,22 +163,22 @@ void process_keystrokes(Editor *editor) {
       case CursorMoveRight:
         cursor_move_right(editor->plane);
         update_cursor(editor);
-        refresh();
+        wrefresh(editor->window);
         break;
       case CursorMoveLeft:
         cursor_move_left(editor->plane);
         update_cursor(editor);
-        refresh();
+        wrefresh(editor->window);
         break;
       case CursorMoveUp:
         cursor_move_up(editor->plane);
         update_cursor(editor);
-        refresh();
+        wrefresh(editor->window);
         break;
       case CursorMoveDown:
         cursor_move_down(editor->plane);
         update_cursor(editor);
-        refresh();
+        wrefresh(editor->window);
         break;
       case InsertChar:
         insert_char(editor->plane, editor_action.ch);
@@ -174,10 +186,17 @@ void process_keystrokes(Editor *editor) {
         repaint_plane(editor);
         cursor_move_right(editor->plane);
         update_cursor(editor);
-        refresh();
+        wrefresh(editor->window);
         break;
       case Quit:
         return;
+      case WindowResize:
+        editor->width = getmaxx(editor->window);
+        editor->height = getmaxy(editor->window);
+        repaint_plane(editor);
+        update_cursor(editor);
+        wrefresh(editor->window);
+        break;
       case Nop:
       default:
         break;
@@ -191,6 +210,6 @@ void process_keystrokes(Editor *editor) {
 void editor_run(Editor *editor) {
   repaint_plane(editor);
   update_cursor(editor);
-  refresh();
+  wrefresh(editor->window);
   process_keystrokes(editor);
 }
