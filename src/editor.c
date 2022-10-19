@@ -123,6 +123,13 @@ void update_cursor(Editor *editor) {
 }
 
 /*
+ * Updates cursor position after resizing a window.
+ */
+void update_cursor_after_resize(Editor *editor) {
+  // TODO
+}
+
+/*
  *
  */
 EditorAction map_key_to_editor_action(int ch) {
@@ -193,8 +200,9 @@ void process_keystrokes(Editor *editor) {
       case WindowResize:
         editor->width = getmaxx(editor->window);
         editor->height = getmaxy(editor->window);
+        //printf("[%d:%d] ", editor->width, editor->height);
         repaint_plane(editor);
-        update_cursor(editor);
+        update_cursor_after_resize(editor);
         wrefresh(editor->window);
         break;
       case Nop:
