@@ -12,8 +12,11 @@
 /*
  * Keystroke definitions.
  */
+#define KEY_NAME_BACKSPACE  "KEY_BACKSPACE"
 #define KEY_NAME_CTRL_Q  "^Q"
+#define KEY_NAME_DELETE  "KEY_DC"
 #define KEY_NAME_DOWN    "KEY_DOWN"
+#define KEY_NAME_F1      "KEY_F(1)"
 #define KEY_NAME_LEFT    "KEY_LEFT"
 #define KEY_NAME_RIGHT   "KEY_RIGHT"
 #define KEY_NAME_UP      "KEY_UP"
@@ -28,9 +31,13 @@ typedef enum EditorActionType_t {
   CursorMoveLeft,
   CursorMoveRight,
   CursorMoveUp,
+  DeleteChar,
+  DeleteCharBefore,
   InsertChar,
   Nop,
   Quit,
+  ShowHelp,
+  SplitLine,
   WindowResize
 } EditorActionType;
 
@@ -54,6 +61,7 @@ void debug(Editor *editor, const char *format, ...) {
   int x = getcurx(editor->window);
   int y = getcury(editor->window);
   mvwaddstr(editor->window, editor->height - 2, 1, buffer);
+  waddstr(editor->window, "                                                                              ");
   wmove(editor->window, y, x);
 }
 
@@ -170,37 +178,6 @@ void update_cursor_after_resize(Editor *editor) {
 }
 
 /*
- *
- */
-EditorAction map_key_to_editor_action(int ch) {
-  const char *key_name = keyname(ch);
-  if (key_name != NULL) {
-    if match_key(key_name, KEY_NAME_CTRL_Q) {
-      return (EditorAction) {.type = Quit, .ch = 0};
-    }
-    if match_key(key_name, KEY_NAME_RIGHT) {
-      return (EditorAction) {.type = CursorMoveRight, .ch = 0};
-    }
-    if match_key(key_name, KEY_NAME_LEFT) {
-      return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
-    }
-    if match_key(key_name, KEY_NAME_UP) {
-      return (EditorAction) {.type = CursorMoveUp, .ch = 0};
-    }
-    if match_key(key_name, KEY_NAME_DOWN) {
-      return (EditorAction) {.type = CursorMoveDown, .ch = 0};
-    }
-    if (is_key_resize(key_name)) return (EditorAction) {.type = WindowResize, .ch = 0};
-    //printf("KEY_NAME = %s ", key_name);
-  }
-  if (ch >= 32 && ch <= 126) {
-    return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
-  }
-  //printf("KEY = %d ", ch);
-  return (EditorAction) {.type = Nop, .ch = 0};
-}
-
-/*
  * Action that performs moving cursor to the right.
  */
 void action_cursor_move_right(Editor *editor) {
@@ -257,11 +234,39 @@ void action_cursor_move_up(Editor *editor) {
 }
 
 /*
+ *
+ */
+EditorAction map_key_to_editor_action(Editor *editor, int ch) {
+  const char *key_name = keyname(ch);
+  if (key_name != NULL) {
+    if match_key(key_name, KEY_NAME_BACKSPACE) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+    if match_key(key_name, KEY_NAME_CTRL_Q) return (EditorAction) {.type = Quit, .ch = 0};
+    if match_key(key_name, KEY_NAME_DELETE) return (EditorAction) {.type = DeleteChar, .ch = 0};
+    if match_key(key_name, KEY_NAME_DOWN) return (EditorAction) {.type = CursorMoveDown, .ch = 0};
+    if match_key(key_name, KEY_NAME_F1) return (EditorAction) {.type = ShowHelp, .ch = 0};
+    if match_key(key_name, KEY_NAME_LEFT) return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
+    if match_key(key_name, KEY_NAME_UP) return (EditorAction) {.type = CursorMoveUp, .ch = 0};
+    if match_key(key_name, KEY_NAME_RIGHT) return (EditorAction) {.type = CursorMoveRight, .ch = 0};
+    if (is_key_resize(key_name)) return (EditorAction) {.type = WindowResize, .ch = 0};
+  }
+  if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
+  if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
+  if (ch == 127) return (EditorAction) {.type = DeleteChar, .ch = 0};
+  // TODO remove when not needed any more
+  if (key_name != NULL) {
+    debug(editor, "%d %s", ch, key_name);
+  } else {
+    debug(editor, "%d", ch);
+  }
+  return (EditorAction) {.type = Nop, .ch = 0};
+}
+
+/*
  * Processes keystrokes.
  */
 void process_keystrokes(Editor *editor) {
   while (true) {
-    EditorAction editor_action = map_key_to_editor_action(getch());
+    EditorAction editor_action = map_key_to_editor_action(editor, getch());
     switch (editor_action.type) {
       case CursorMoveRight:
         action_cursor_move_right(editor);
@@ -275,6 +280,12 @@ void process_keystrokes(Editor *editor) {
       case CursorMoveUp:
         action_cursor_move_up(editor);
         break;
+      case DeleteChar:
+        debug(editor, "DeleteChar");
+        break;
+      case DeleteCharBefore:
+        debug(editor, "DeleteCharBefore");
+        break;
       case InsertChar:
         insert_char(editor->plane, editor_action.ch);
         fix_vert_pointers(editor->plane);
@@ -285,6 +296,12 @@ void process_keystrokes(Editor *editor) {
         break;
       case Quit:
         return;
+      case ShowHelp:
+        debug(editor, "ShowHelp");
+        break;
+      case SplitLine:
+        debug(editor, "SplitLine");
+        break;
       case WindowResize:
         editor->width = getmaxx(editor->window);
         editor->height = getmaxy(editor->window);

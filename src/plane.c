@@ -322,7 +322,7 @@ Position cursor_init(Plane *plane) {
  * Returns the current cursor position.
  */
 Position cursor_pos(Plane *plane) {
-  size_t row = 0, col = 0;
+  int row = 0, col = 0;
   Box *current = plane->cursor;
   if (current != NULL) {
     while (current->left != NULL) {
