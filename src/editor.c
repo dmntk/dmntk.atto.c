@@ -1,36 +1,87 @@
 #define NCURSES_WIDECHAR 1
 
-#include <locale.h>
+#if NCURSES_WIDECHAR
+
+// include and use ncurses only when wide characters are available
 #include <ncurses.h>
+
+#endif
+
+#include <locale.h>
 #include <string.h>
 
 #include "editor.h"
 #include "glyphs.h"
 
+/*
+ * Key names.
+ */
+#define KEY_NAME_BACKSPACE      "KEY_BACKSPACE"
+#define KEY_NAME_CONTROL_HOME   "kHOM5"
+#define KEY_NAME_CONTROL_END    "kEND5"
+#define KEY_NAME_CONTROL_PG_DN  "kNXT5"
+#define KEY_NAME_CONTROL_PG_UP  "kPRV5"
+#define KEY_NAME_CONTROL_Q      "^Q"
+#define KEY_NAME_DELETE         "KEY_DC"
+#define KEY_NAME_DOWN           "KEY_DOWN"
+#define KEY_NAME_END            "KEY_END"
+#define KEY_NAME_F1             "KEY_F(1)"
+#define KEY_NAME_HOME           "KEY_HOME"
+#define KEY_NAME_LEFT           "KEY_LEFT"
+#define KEY_NAME_PG_DN          "KEY_NPAGE"
+#define KEY_NAME_PG_UP          "KEY_PPAGE"
+#define KEY_NAME_RESIZE         "KEY_RESIZE"
+#define KEY_NAME_RIGHT          "KEY_RIGHT"
+#define KEY_NAME_SHIFT_TAB      "KEY_BTAB"
+#define KEY_NAME_TAB            "^I"
+#define KEY_NAME_UP             "KEY_UP"
+
+/*
+ * Compares key names.
+ */
 #define match_key(actual, expected) (strcmp(actual, expected) == 0)
 
 /*
- * Keystroke definitions.
+ * Key checks.
  */
-#define KEY_NAME_BACKSPACE  "KEY_BACKSPACE"
-#define KEY_NAME_CTRL_Q  "^Q"
-#define KEY_NAME_DELETE  "KEY_DC"
-#define KEY_NAME_DOWN    "KEY_DOWN"
-#define KEY_NAME_F1      "KEY_F(1)"
-#define KEY_NAME_LEFT    "KEY_LEFT"
-#define KEY_NAME_RIGHT   "KEY_RIGHT"
-#define KEY_NAME_UP      "KEY_UP"
-
-#define is_key_resize(key_name)  match_key(key_name, "KEY_RESIZE")
+#define is_key_backspace(key_name)      match_key(key_name, KEY_NAME_BACKSPACE)
+#define is_key_control_end(key_name)    match_key(key_name, KEY_NAME_CONTROL_END)
+#define is_key_control_home(key_name)   match_key(key_name, KEY_NAME_CONTROL_HOME)
+#define is_key_control_pg_dn(key_name)  match_key(key_name, KEY_NAME_CONTROL_PG_DN)
+#define is_key_control_pg_up(key_name)  match_key(key_name, KEY_NAME_CONTROL_PG_UP)
+#define is_key_control_q(key_name)      match_key(key_name, KEY_NAME_CONTROL_Q)
+#define is_key_delete(key_name)         match_key(key_name, KEY_NAME_DELETE)
+#define is_key_down(key_name)           match_key(key_name, KEY_NAME_DOWN)
+#define is_key_end(key_name)            match_key(key_name, KEY_NAME_END)
+#define is_key_f1(key_name)             match_key(key_name, KEY_NAME_F1)
+#define is_key_home(key_name)           match_key(key_name, KEY_NAME_HOME)
+#define is_key_left(key_name)           match_key(key_name, KEY_NAME_LEFT)
+#define is_key_pg_dn(key_name)          match_key(key_name, KEY_NAME_PG_DN)
+#define is_key_pg_up(key_name)          match_key(key_name, KEY_NAME_PG_UP)
+#define is_key_resize(key_name)         match_key(key_name, KEY_NAME_RESIZE)
+#define is_key_right(key_name)          match_key(key_name, KEY_NAME_RIGHT)
+#define is_key_shift_tab(key_name)      match_key(key_name, KEY_NAME_SHIFT_TAB)
+#define is_key_tab(key_name)            match_key(key_name, KEY_NAME_TAB)
+#define is_key_up(key_name)             match_key(key_name, KEY_NAME_UP)
 
 /*
  * Names of available editor actions.
  */
 typedef enum EditorActionType_t {
+  CursorMoveCellStart,
+  CursorMoveCellEnd,
+  CursorMoveCellTop,
+  CursorMoveCellBottom,
+  CursorMoveCellLeft,
+  CursorMoveCellRight,
   CursorMoveDown,
   CursorMoveLeft,
   CursorMoveRight,
   CursorMoveUp,
+  CursorMoveTableStart,
+  CursorMoveTableEnd,
+  CursorMoveTableTop,
+  CursorMoveTableBottom,
   DeleteChar,
   DeleteCharBefore,
   InsertChar,
@@ -38,7 +89,7 @@ typedef enum EditorActionType_t {
   Quit,
   ShowHelp,
   SplitLine,
-  WindowResize
+  ResizeWindow
 } EditorActionType;
 
 /*
@@ -174,7 +225,55 @@ void update_cursor_x(Editor *editor, int cur_pos_x, int cur_pos_y) {
  * Updates cursor position after resizing a window.
  */
 void update_cursor_after_resize(Editor *editor) {
-  // TODO
+  // TODO implement updating the cursor position while window resizing
+  repaint_plane(editor);
+  wrefresh(editor->window);
+}
+
+/*
+ * Action that performs moving cursor to the next cell to the right from current.
+ */
+void action_cursor_move_cell_right(Editor *editor) {
+  debug(editor, "CursorMoveCellRight");
+}
+
+/*
+ * Action that performs moving cursor to the previous cell to the left from current.
+ */
+void action_cursor_move_cell_left(Editor *editor) {
+  debug(editor, "CursorMoveCellLeft");
+}
+
+void action_cursor_move_cell_start(Editor *editor) {
+  debug(editor, "CursorMoveCellStart");
+}
+
+void action_cursor_move_cell_top(Editor *editor) {
+  debug(editor, "CursorMoveCellTop");
+}
+
+void action_cursor_move_cell_bottom(Editor *editor) {
+  debug(editor, "CursorMoveCellBottom");
+}
+
+void action_cursor_move_cell_end(Editor *editor) {
+  debug(editor, "CursorMoveCellEnd");
+}
+
+void action_cursor_move_table_start(Editor *editor) {
+  debug(editor, "CursorMoveTableStart");
+}
+
+void action_cursor_move_table_end(Editor *editor) {
+  debug(editor, "CursorMoveTableEnd");
+}
+
+void action_cursor_move_table_top(Editor *editor) {
+  debug(editor, "CursorMoveTableTop");
+}
+
+void action_cursor_move_table_bottom(Editor *editor) {
+  debug(editor, "CursorMoveTableBottom");
 }
 
 /*
@@ -236,28 +335,78 @@ void action_cursor_move_up(Editor *editor) {
 /*
  *
  */
-EditorAction map_key_to_editor_action(Editor *editor, int ch) {
+void action_delete_char(Editor *editor) {
+  debug(editor, "DeleteChar");
+}
+
+/*
+ *
+ */
+void action_delete_char_before(Editor *editor) {
+  debug(editor, "DeleteCharBefore");
+}
+
+/*
+ *
+ */
+void action_insert_char(Editor *editor, wchar_t ch) {
+  insert_char(editor->plane, ch);
+  fix_vert_pointers(editor->plane);
+  repaint_plane(editor);
+  action_cursor_move_right(editor);
+}
+
+/*
+ *
+ */
+void action_show_help(Editor *editor) {
+  debug(editor, "ShowHelp");
+}
+
+/*
+ *
+ */
+void action_split_line(Editor *editor) {
+  debug(editor, "SplitLine");
+}
+
+/*
+ * 😀
+ */
+EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
   const char *key_name = keyname(ch);
   if (key_name != NULL) {
-    if match_key(key_name, KEY_NAME_BACKSPACE) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
-    if match_key(key_name, KEY_NAME_CTRL_Q) return (EditorAction) {.type = Quit, .ch = 0};
-    if match_key(key_name, KEY_NAME_DELETE) return (EditorAction) {.type = DeleteChar, .ch = 0};
-    if match_key(key_name, KEY_NAME_DOWN) return (EditorAction) {.type = CursorMoveDown, .ch = 0};
-    if match_key(key_name, KEY_NAME_F1) return (EditorAction) {.type = ShowHelp, .ch = 0};
-    if match_key(key_name, KEY_NAME_LEFT) return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
-    if match_key(key_name, KEY_NAME_UP) return (EditorAction) {.type = CursorMoveUp, .ch = 0};
-    if match_key(key_name, KEY_NAME_RIGHT) return (EditorAction) {.type = CursorMoveRight, .ch = 0};
-    if (is_key_resize(key_name)) return (EditorAction) {.type = WindowResize, .ch = 0};
+    if (is_key_backspace(key_name)) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+    if (is_key_control_end(key_name)) return (EditorAction) {.type = CursorMoveTableEnd, .ch = 0};
+    if (is_key_control_home(key_name)) return (EditorAction) {.type = CursorMoveTableStart, .ch = 0};
+    if (is_key_control_pg_dn(key_name)) return (EditorAction) {.type = CursorMoveTableBottom, .ch = 0};
+    if (is_key_control_pg_up(key_name)) return (EditorAction) {.type = CursorMoveTableTop, .ch = 0};
+    if (is_key_control_q(key_name)) return (EditorAction) {.type = Quit, .ch = 0};
+    if (is_key_delete(key_name)) return (EditorAction) {.type = DeleteChar, .ch = 0};
+    if (is_key_down(key_name)) return (EditorAction) {.type = CursorMoveDown, .ch = 0};
+    if (is_key_end(key_name)) return (EditorAction) {.type = CursorMoveCellEnd, .ch = 0};
+    if (is_key_f1(key_name)) return (EditorAction) {.type = ShowHelp, .ch = 0};
+    if (is_key_home(key_name)) return (EditorAction) {.type = CursorMoveCellStart, .ch = 0};
+    if (is_key_left(key_name)) return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
+    if (is_key_pg_dn(key_name)) return (EditorAction) {.type = CursorMoveCellBottom, .ch = 0};
+    if (is_key_pg_up(key_name)) return (EditorAction) {.type = CursorMoveCellTop, .ch = 0};
+    if (is_key_right(key_name)) return (EditorAction) {.type = CursorMoveRight, .ch = 0};
+    if (is_key_resize(key_name)) return (EditorAction) {.type = ResizeWindow, .ch = 0};
+    if (is_key_shift_tab(key_name)) return (EditorAction) {.type = CursorMoveCellLeft, .ch = 0};
+    if (is_key_tab(key_name)) return (EditorAction) {.type = CursorMoveCellRight, .ch = 0};
+    if (is_key_up(key_name)) return (EditorAction) {.type = CursorMoveUp, .ch = 0};
   }
   if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
   if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
-  if (ch == 127) return (EditorAction) {.type = DeleteChar, .ch = 0};
-  // TODO remove when not needed any more
+  if (ch == 127) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+  // TODO remove begin
+  // remove when not needed anymore
   if (key_name != NULL) {
     debug(editor, "%d %s", ch, key_name);
   } else {
     debug(editor, "%d", ch);
   }
+  // TODO remove end
   return (EditorAction) {.type = Nop, .ch = 0};
 }
 
@@ -266,8 +415,28 @@ EditorAction map_key_to_editor_action(Editor *editor, int ch) {
  */
 void process_keystrokes(Editor *editor) {
   while (true) {
-    EditorAction editor_action = map_key_to_editor_action(editor, getch());
+    wint_t ch;
+    int status = wget_wch(editor->window, &ch);
+    EditorAction editor_action = map_key_to_editor_action(editor, (wchar_t) ch, status);
     switch (editor_action.type) {
+      case CursorMoveCellRight:
+        action_cursor_move_cell_right(editor);
+        break;
+      case CursorMoveCellLeft:
+        action_cursor_move_cell_left(editor);
+        break;
+      case CursorMoveCellTop:
+        action_cursor_move_cell_top(editor);
+        break;
+      case CursorMoveCellBottom:
+        action_cursor_move_cell_bottom(editor);
+        break;
+      case CursorMoveCellStart:
+        action_cursor_move_cell_start(editor);
+        break;
+      case CursorMoveCellEnd:
+        action_cursor_move_cell_end(editor);
+        break;
       case CursorMoveRight:
         action_cursor_move_right(editor);
         break;
@@ -280,36 +449,39 @@ void process_keystrokes(Editor *editor) {
       case CursorMoveUp:
         action_cursor_move_up(editor);
         break;
+      case CursorMoveTableStart:
+        action_cursor_move_table_start(editor);
+        break;
+      case CursorMoveTableEnd:
+        action_cursor_move_table_end(editor);
+        break;
+      case CursorMoveTableTop:
+        action_cursor_move_table_top(editor);
+        break;
+      case CursorMoveTableBottom:
+        action_cursor_move_table_bottom(editor);
+        break;
       case DeleteChar:
-        debug(editor, "DeleteChar");
+        action_delete_char(editor);
         break;
       case DeleteCharBefore:
-        debug(editor, "DeleteCharBefore");
+        action_delete_char_before(editor);
         break;
       case InsertChar:
-        insert_char(editor->plane, editor_action.ch);
-        fix_vert_pointers(editor->plane);
-        repaint_plane(editor);
-        action_cursor_move_right(editor);
-        //cursor_move_right(editor->plane);
-        //update_cursor(editor);
-        //wrefresh(editor->window);
+        action_insert_char(editor, editor_action.ch);
         break;
       case Quit:
         return;
       case ShowHelp:
-        debug(editor, "ShowHelp");
+        action_show_help(editor);
         break;
       case SplitLine:
-        debug(editor, "SplitLine");
+        action_split_line(editor);
         break;
-      case WindowResize:
+      case ResizeWindow:
         editor->width = getmaxx(editor->window);
         editor->height = getmaxy(editor->window);
-        //printf("[%d:%d] ", editor->width, editor->height);
-        repaint_plane(editor);
         update_cursor_after_resize(editor);
-        wrefresh(editor->window);
         break;
       case Nop:
       default:
