@@ -16,8 +16,8 @@ typedef struct Plane_t {
  * Row index and column index is given relative to the top-left corner of the plane.
  */
 typedef struct Position_t {
-  size_t row;  // row index
-  size_t col;  // col index
+  int row;  // row index
+  int col;  // col index
 } Position;
 
 /* Creates a new empty plane. */

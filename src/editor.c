@@ -95,20 +95,22 @@ void editor_delete(Editor *editor) {
  */
 void repaint_plane(Editor *editor) {
   Box *box = NULL, *row = editor->plane->start;
-  int row_index = editor->offset_y, col_index = editor->offset_x, col_count = 0, row_count = 0;
+  int x = 0, y = 0, col_count = 0, row_count = 0;
+  for (int i = editor->offset_y; i > 0 && row->down != NULL; --i) row = row->down;
   while (row != NULL && row_count < editor->height - 1) {
     box = row;
+    for (int i = editor->offset_x; i > 0 && box->right != NULL; --i) box = box->right;
     while (box != NULL && col_count < editor->width) {
-      mvwaddnwstr(editor->window, row_index, col_index, &box->ch, 1);
+      mvwaddnwstr(editor->window, y, x, &box->ch, 1);
       box = box->right;
-      col_index++;
       col_count++;
+      x++;
     }
     row = row->down;
-    row_index++;
     row_count++;
-    col_index = 0;
     col_count = 0;
+    y++;
+    x = 0;
   }
 }
 
@@ -117,8 +119,17 @@ void repaint_plane(Editor *editor) {
  */
 void update_cursor(Editor *editor) {
   Position cur_pos = cursor_pos(editor->plane);
-  int row = (int) cur_pos.row;
-  int col = (int) cur_pos.col;
+  int col = cur_pos.col;
+  if (col >= editor->width - 2) {
+    editor->offset_x = col - editor->width + 1;
+    col = editor->width - 2;
+    repaint_plane(editor);
+  }
+  int row = cur_pos.row;
+//  if (row > editor->height - 1) {
+//    editor->offset_y = row - editor->height + 1;
+//    row = editor->height - 1;
+//  }
   wmove(editor->window, row, col);
 }
 
