@@ -8,7 +8,16 @@
 
 #define LOAD_BUFFER_SIZE 5000
 
+/*
+ * Moves the specified box pointer to the right,
+ * until the left-vertical line is encountered.
+ */
 #define move_to_vert_line_left(box)      while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
+
+/*
+ * Moves the specified box pointer to the right,
+ * until the vertical line or crossing is encountered.
+ */
 #define move_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
 
 #define C_RED     "\x001b[31m"
@@ -155,30 +164,18 @@ void append_row(Plane *plane, Box *row) {
 }
 
 /*
- * Prints the content of the plane to standard output.
- */
-void display_plane(const Plane *plane) {
-  Box *box, *row = plane->start;
-  while (row != NULL) {
-    box = row;
-    while (box != NULL) {
-      printf("%lc", box->ch);
-      box = box->right;
-    }
-    printf("\n");
-    row = row->down;
-  }
-}
-
-/*
  * Prints the attributes of all boxes of the plane to standard output.
  */
-void display_plane_attributes(const Plane *plane) {
+void display_attributes(const Plane *plane) {
   Box *box, *row = plane->start;
   while (row != NULL) {
     box = row;
     while (box != NULL) {
-      if (box->attr & ATTR_JOIN) printf("J"); else printf("-");
+      if (box->attr & ATTR_JOIN) {
+        printf("─");
+      } else {
+        printf("*");
+      }
       box = box->right;
     }
     printf("\n");
@@ -497,6 +494,26 @@ void cursor_move_table_bottom(Plane *plane) {
   plane->cursor = is_box_drawing_character(box->ch) ? last : box;
 }
 
+bool is_whitespace_column_before_vert_line(Box *pos) {
+  Box *row = pos, *box = NULL;
+  while (row->up != NULL && !IS_JOIN(row->attr)) {
+    row = row->up;
+  }
+  while (row != NULL) {
+    // check the character, if box-drawing then skip this row
+    if (!is_box_drawing_character(row->ch)) {
+      box = row;
+      move_to_vert_line_crossing(box);
+      // if there is no whitespace before vertical line, then no further checking is needed
+      if (!is_whitespace(box->ch)) return false;
+      // if there is a whitespace, but just between two box-drawing characters, then no further checking is needed
+      if (box->left != NULL && is_box_drawing_character(box->left->ch)) return false;
+    }
+    row = row->down;
+  }
+  return true;
+}
+
 /*
  * Inserts a character at the current cursor position.
  * Starting from current cursor position, all characters in the cell are shifted to the right.
@@ -505,9 +522,7 @@ void cursor_move_table_bottom(Plane *plane) {
  */
 void insert_char(Plane *plane, wchar_t ch) {
   if (plane->cursor == NULL) return;
-  Box *current = plane->cursor;
-  Box *row;
-  Box *box;
+  Box *box = NULL, *row = NULL, *current = plane->cursor;
   // move to the right (sic!) until left (sic!) vertical line is encountered
   move_to_vert_line_left(current);
   if (is_whitespace(current->ch) && current != plane->cursor) {
@@ -549,4 +564,28 @@ void insert_char(Plane *plane, wchar_t ch) {
   }
   // new character replaces the character under the cursor
   plane->cursor->ch = ch;
+}
+
+/*
+ * Deletes a character at the current cursor position.
+ */
+void delete_char(Plane *plane) {
+  if (plane->cursor == NULL) return;
+  Box *box = plane->cursor, *row = NULL, *current = NULL;
+  // shift all characters left starting at the current cursor position
+  // and ending before the next box-drawing character,
+  // place a whitespace just before the box-drawing character
+  while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
+    box->ch = box->right->ch;
+    box = box->right;
+  }
+  box->ch = WS;
+  // move to the top of the information item name or table body
+  row = plane->cursor;
+  while (row->up != NULL && !IS_JOIN(row->attr)) {
+    row = row->up;
+  }
+  if (is_whitespace_column_before_vert_line(plane->cursor)) {
+
+  }
 }

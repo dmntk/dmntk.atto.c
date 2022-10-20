@@ -26,6 +26,9 @@
 #define KEY_NAME_DOWN           "KEY_DOWN"
 #define KEY_NAME_END            "KEY_END"
 #define KEY_NAME_F1             "KEY_F(1)"
+#define KEY_NAME_F5             "KEY_F(5)"
+#define KEY_NAME_F6             "KEY_F(6)"
+#define KEY_NAME_F7             "KEY_F(7)"
 #define KEY_NAME_HOME           "KEY_HOME"
 #define KEY_NAME_LEFT           "KEY_LEFT"
 #define KEY_NAME_PG_DN          "KEY_NPAGE"
@@ -54,6 +57,9 @@
 #define is_key_down(key_name)           match_key(key_name, KEY_NAME_DOWN)
 #define is_key_end(key_name)            match_key(key_name, KEY_NAME_END)
 #define is_key_f1(key_name)             match_key(key_name, KEY_NAME_F1)
+#define is_key_f5(key_name)             match_key(key_name, KEY_NAME_F5)
+#define is_key_f6(key_name)             match_key(key_name, KEY_NAME_F6)
+#define is_key_f7(key_name)             match_key(key_name, KEY_NAME_F7)
 #define is_key_home(key_name)           match_key(key_name, KEY_NAME_HOME)
 #define is_key_left(key_name)           match_key(key_name, KEY_NAME_LEFT)
 #define is_key_pg_dn(key_name)          match_key(key_name, KEY_NAME_PG_DN)
@@ -87,7 +93,10 @@ typedef enum EditorActionType_t {
   InsertChar,
   Nop,
   Quit,
+  ShowAttributes,
+  ShowEditor,
   ShowHelp,
+  ShowPointers,
   SplitLine,
   ResizeWindow
 } EditorActionType;
@@ -152,6 +161,7 @@ Editor *editor_new(const char file_name[static 1]) {
   editor->height = getmaxy(window);
   editor->offset_x = 0;
   editor->offset_y = 0;
+  editor->state = EditorView;
   return editor;
 }
 
@@ -168,7 +178,8 @@ void editor_delete(Editor *editor) {
  * Repaints the plane.
  */
 void repaint_plane(Editor *editor) {
-  werase(editor->window);
+  curs_set(0);
+  wclear(editor->window);
   Box *box = NULL, *row = editor->plane->start;
   int x = 0, y = 0, col_count = 0, row_count = 0;
   for (int i = editor->offset_y; i > 0 && row->down != NULL; --i) row = row->down;
@@ -187,17 +198,20 @@ void repaint_plane(Editor *editor) {
     y++;
     x = 0;
   }
+  curs_set(1);
 }
 
 /*
  * Updates cursor coordinates displayed in status bar.
  */
-void update_cursor_coordinates(Editor *editor, const Position *cur_pos, int x, int y) {
+void display_cursor_coordinates(Editor *editor, const Position *cur_pos, int x, int y) {
+  curs_set(0);
   char buffer[200];
   sprintf(buffer, "    %d:%d (%d:%d) [%d:%d] ", cur_pos->col, cur_pos->row, x, y, editor->width, editor->height);
   int pos_x = editor->width - (int) strlen(buffer);
   for (int i = 0; i < pos_x; ++i) mvwaddnwstr(editor->window, editor->height - 1, i, WSS, 1);
   mvwaddstr(editor->window, editor->height - 1, pos_x, buffer);
+  curs_set(1);
 }
 
 /*
@@ -206,7 +220,7 @@ void update_cursor_coordinates(Editor *editor, const Position *cur_pos, int x, i
 void update_cursor(Editor *editor, const Position *cur_pos) {
   int x = cur_pos->col - editor->offset_x;
   int y = cur_pos->row - editor->offset_y;
-  update_cursor_coordinates(editor, cur_pos, x, y);
+  display_cursor_coordinates(editor, cur_pos, x, y);
   wmove(editor->window, y, x);
 }
 
@@ -361,7 +375,11 @@ void action_cursor_move_up(Editor *editor) {
  *
  */
 void action_delete_char(Editor *editor) {
-  debug(editor, "DeleteChar");
+  delete_char(editor->plane);
+  repaint_plane(editor);
+  wrefresh(editor->window);
+  Position cur_pos = cursor_pos(editor->plane);
+  update_cursor(editor, &cur_pos);
 }
 
 /*
@@ -384,6 +402,32 @@ void action_insert_char(Editor *editor, wchar_t ch) {
 /*
  *
  */
+void action_show_attributes(Editor *editor) {
+  editor->state = AttributesView;
+  wclear(editor->window);
+  Box *box, *row = editor->plane->start;
+  int x = 0, y = 0;
+  while (row != NULL) {
+    box = row;
+    while (box != NULL) {
+      if (box->attr & ATTR_JOIN) {
+        mvwaddnwstr(editor->window, y, x, L"─", 1);
+      } else {
+        mvwaddnwstr(editor->window, y, x, L"*", 1);
+      }
+      box = box->right;
+      x++;
+    }
+    row = row->down;
+    x = 0;
+    y++;
+  }
+  wrefresh(editor->window);
+}
+
+/*
+ *
+ */
 void action_show_help(Editor *editor) {
   debug(editor, "ShowHelp");
 }
@@ -393,6 +437,17 @@ void action_show_help(Editor *editor) {
  */
 void action_split_line(Editor *editor) {
   debug(editor, "SplitLine");
+}
+
+/*
+ *
+ */
+void action_show_editor(Editor *editor) {
+  editor->state = EditorView;
+  repaint_plane(editor);
+  Position cur_pos = cursor_pos(editor->plane);
+  update_cursor(editor, &cur_pos);
+  wrefresh(editor->window);
 }
 
 /*
@@ -411,6 +466,9 @@ EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
     if (is_key_down(key_name)) return (EditorAction) {.type = CursorMoveDown, .ch = 0};
     if (is_key_end(key_name)) return (EditorAction) {.type = CursorMoveCellEnd, .ch = 0};
     if (is_key_f1(key_name)) return (EditorAction) {.type = ShowHelp, .ch = 0};
+    if (is_key_f5(key_name)) return (EditorAction) {.type = ShowEditor, .ch = 0};
+    if (is_key_f6(key_name)) return (EditorAction) {.type = ShowAttributes, .ch = 0};
+    if (is_key_f7(key_name)) return (EditorAction) {.type = ShowPointers, .ch = 0};
     if (is_key_home(key_name)) return (EditorAction) {.type = CursorMoveCellStart, .ch = 0};
     if (is_key_left(key_name)) return (EditorAction) {.type = CursorMoveLeft, .ch = 0};
     if (is_key_pg_dn(key_name)) return (EditorAction) {.type = CursorMoveCellBottom, .ch = 0};
@@ -445,73 +503,92 @@ void process_keystrokes(Editor *editor) {
     wint_t ch;
     int status = wget_wch(editor->window, &ch);
     EditorAction editor_action = map_key_to_editor_action(editor, (wchar_t) ch, status);
-    switch (editor_action.type) {
-      case CursorMoveCellRight:
-        action_cursor_move_cell_right(editor);
+    switch (editor->state) {
+      case EditorView:
+        switch (editor_action.type) {
+          case CursorMoveCellRight:
+            action_cursor_move_cell_right(editor);
+            break;
+          case CursorMoveCellLeft:
+            action_cursor_move_cell_left(editor);
+            break;
+          case CursorMoveCellTop:
+            action_cursor_move_cell_top(editor);
+            break;
+          case CursorMoveCellBottom:
+            action_cursor_move_cell_bottom(editor);
+            break;
+          case CursorMoveCellStart:
+            action_cursor_move_cell_start(editor);
+            break;
+          case CursorMoveCellEnd:
+            action_cursor_move_cell_end(editor);
+            break;
+          case CursorMoveRight:
+            action_cursor_move_right(editor);
+            break;
+          case CursorMoveLeft:
+            action_cursor_move_left(editor);
+            break;
+          case CursorMoveDown:
+            action_cursor_move_down(editor);
+            break;
+          case CursorMoveUp:
+            action_cursor_move_up(editor);
+            break;
+          case CursorMoveTableStart:
+            action_cursor_move_table_start(editor);
+            break;
+          case CursorMoveTableEnd:
+            action_cursor_move_table_end(editor);
+            break;
+          case CursorMoveTableTop:
+            action_cursor_move_table_top(editor);
+            break;
+          case CursorMoveTableBottom:
+            action_cursor_move_table_bottom(editor);
+            break;
+          case DeleteChar:
+            action_delete_char(editor);
+            break;
+          case DeleteCharBefore:
+            action_delete_char_before(editor);
+            break;
+          case InsertChar:
+            action_insert_char(editor, editor_action.ch);
+            break;
+          case Quit:
+            return;
+          case ShowAttributes:
+            action_show_attributes(editor);
+            break;
+          case ShowHelp:
+            action_show_help(editor);
+            break;
+          case SplitLine:
+            action_split_line(editor);
+            break;
+          case ResizeWindow:
+            editor->width = getmaxx(editor->window);
+            editor->height = getmaxy(editor->window);
+            update_cursor_after_resize(editor);
+            break;
+          case Nop:
+          default:
+            break;
+        }
         break;
-      case CursorMoveCellLeft:
-        action_cursor_move_cell_left(editor);
-        break;
-      case CursorMoveCellTop:
-        action_cursor_move_cell_top(editor);
-        break;
-      case CursorMoveCellBottom:
-        action_cursor_move_cell_bottom(editor);
-        break;
-      case CursorMoveCellStart:
-        action_cursor_move_cell_start(editor);
-        break;
-      case CursorMoveCellEnd:
-        action_cursor_move_cell_end(editor);
-        break;
-      case CursorMoveRight:
-        action_cursor_move_right(editor);
-        break;
-      case CursorMoveLeft:
-        action_cursor_move_left(editor);
-        break;
-      case CursorMoveDown:
-        action_cursor_move_down(editor);
-        break;
-      case CursorMoveUp:
-        action_cursor_move_up(editor);
-        break;
-      case CursorMoveTableStart:
-        action_cursor_move_table_start(editor);
-        break;
-      case CursorMoveTableEnd:
-        action_cursor_move_table_end(editor);
-        break;
-      case CursorMoveTableTop:
-        action_cursor_move_table_top(editor);
-        break;
-      case CursorMoveTableBottom:
-        action_cursor_move_table_bottom(editor);
-        break;
-      case DeleteChar:
-        action_delete_char(editor);
-        break;
-      case DeleteCharBefore:
-        action_delete_char_before(editor);
-        break;
-      case InsertChar:
-        action_insert_char(editor, editor_action.ch);
-        break;
-      case Quit:
-        return;
-      case ShowHelp:
-        action_show_help(editor);
-        break;
-      case SplitLine:
-        action_split_line(editor);
-        break;
-      case ResizeWindow:
-        editor->width = getmaxx(editor->window);
-        editor->height = getmaxy(editor->window);
-        update_cursor_after_resize(editor);
-        break;
-      case Nop:
       default:
+        switch (editor_action.type) {
+          case ShowEditor:
+            action_show_editor(editor);
+            break;
+          case Quit:
+            return;
+          case Nop:
+          default:
+            break;
+        }
         break;
     }
   }

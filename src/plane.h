@@ -39,7 +39,7 @@ void append_row(Plane *plane, Box *row);
 void display_plane(const Plane *plane);
 
 /* Prints the attributes of all boxes of the plane to standard output. */
-void display_plane_attributes(const Plane *plane);
+void display_attributes(const Plane *plane);
 
 /* Prints the pointers of all boxes to standard output. */
 void display_plane_pointers(const Plane *plane);
@@ -96,5 +96,8 @@ void cursor_move_table_bottom(Plane *plane);
 
 /* Inserts a character at the current cursor position. */
 void insert_char(Plane *plane, wchar_t ch);
+
+/* Deletes a character at the current cursor position. */
+void delete_char(Plane *plane);
 
 #endif // PLANE_PLANE_H
