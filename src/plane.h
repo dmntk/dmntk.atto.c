@@ -70,6 +70,12 @@ void cursor_move_up(Plane *plane);
 /* Moves cursor one box down. */
 void cursor_move_down(Plane *plane);
 
+/* Moves cursor to the beginning of the current cell. */
+void cursor_move_cell_start(Plane *plane);
+
+/* Moves cursor to the end of the current cell. */
+void cursor_move_cell_end(Plane *plane);
+
 /* Inserts a character at the current cursor position. */
 void insert_char(Plane *plane, wchar_t ch);
 

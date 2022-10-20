@@ -406,6 +406,24 @@ void cursor_move_down(Plane *plane) {
 }
 
 /*
+ * Moves cursor to the beginning of the current cell.
+ */
+void cursor_move_cell_start(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->left != NULL && !is_box_drawing_character(plane->cursor->left->ch)) {
+    plane->cursor = plane->cursor->left;
+  }
+}
+
+/*
+ * Moves cursor to the end of the current cell.
+ */
+void cursor_move_cell_end(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->right != NULL && !is_box_drawing_character(plane->cursor->right->ch)) {
+    plane->cursor = plane->cursor->right;
+  }
+}
+
+/*
  * Inserts a character at the current cursor position.
  * Starting from current cursor position, all characters in the cell are shifted to the right.
  * If there is no enough space for a new character, the cell is appended with one additional whitespace.
