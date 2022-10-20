@@ -475,20 +475,26 @@ void cursor_move_table_end(Plane *plane) {
  * Moves cursor to the top of the table.
  */
 void cursor_move_table_top(Plane *plane) {
-  while (plane->cursor != NULL && plane->cursor->up != NULL) {
-    if (plane->cursor->up->up == NULL) break;
-    plane->cursor = plane->cursor->left;
+  Box *box = plane->cursor, *last = NULL;
+  while (box != NULL && box->up != NULL) {
+    if (!is_box_drawing_character(box->ch)) last = box;
+    if (box->up->up == NULL) break;
+    box = box->up;
   }
+  plane->cursor = is_box_drawing_character(box->ch) ? last : box;
 }
 
 /*
  * Moves cursor to the end of the table.
  */
 void cursor_move_table_bottom(Plane *plane) {
-  while (plane->cursor != NULL && plane->cursor->down != NULL) {
-    if (plane->cursor->down->down == NULL) break;
-    plane->cursor = plane->cursor->down;
+  Box *box = plane->cursor, *last = NULL;
+  while (box != NULL && box->down != NULL) {
+    if (!is_box_drawing_character(box->ch)) last = box;
+    if (box->down->down == NULL) break;
+    box = box->down;
   }
+  plane->cursor = is_box_drawing_character(box->ch) ? last : box;
 }
 
 /*
