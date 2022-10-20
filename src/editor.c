@@ -192,9 +192,9 @@ void repaint_plane(Editor *editor) {
 /*
  * Updates cursor coordinates displayed in status bar.
  */
-void update_cursor_coordinates(Editor *editor, int cur_pos_x, int cur_pos_y, int x, int y) {
+void update_cursor_coordinates(Editor *editor, const Position *cur_pos, int x, int y) {
   char buffer[200];
-  sprintf(buffer, "    %d:%d (%d:%d) [%d:%d] ", cur_pos_x, cur_pos_y, x, y, editor->width, editor->height);
+  sprintf(buffer, "    %d:%d (%d:%d) [%d:%d] ", cur_pos->col, cur_pos->row, x, y, editor->width, editor->height);
   int pos_x = editor->width - (int) strlen(buffer);
   for (int i = 0; i < pos_x; ++i) mvwaddnwstr(editor->window, editor->height - 1, i, WSS, 1);
   mvwaddstr(editor->window, editor->height - 1, pos_x, buffer);
@@ -203,21 +203,10 @@ void update_cursor_coordinates(Editor *editor, int cur_pos_x, int cur_pos_y, int
 /*
  * Updates cursor position.
  */
-void update_cursor(Editor *editor) {
-  Position cur_pos = cursor_pos(editor->plane);
-  int x = cur_pos.col - editor->offset_x;
-  int y = cur_pos.row - editor->offset_y;
-  update_cursor_coordinates(editor, cur_pos.col, cur_pos.row, x, y);
-  wmove(editor->window, y, x);
-}
-
-/*
- * Updates cursor position.
- */
-void update_cursor_x(Editor *editor, int cur_pos_x, int cur_pos_y) {
-  int x = cur_pos_x - editor->offset_x;
-  int y = cur_pos_y - editor->offset_y;
-  update_cursor_coordinates(editor, cur_pos_x, cur_pos_y, x, y);
+void update_cursor_x(Editor *editor, const Position *cur_pos) {
+  int x = cur_pos->col - editor->offset_x;
+  int y = cur_pos->row - editor->offset_y;
+  update_cursor_coordinates(editor, cur_pos, x, y);
   wmove(editor->window, y, x);
 }
 
@@ -286,7 +275,7 @@ void action_cursor_move_right(Editor *editor) {
     editor->offset_x = cur_pos.col - editor->width + 2;
     repaint_plane(editor);
   }
-  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  update_cursor_x(editor, &cur_pos);
   wrefresh(editor->window);
 }
 
@@ -300,7 +289,7 @@ void action_cursor_move_left(Editor *editor) {
     editor->offset_x = cur_pos.col - 1;
     repaint_plane(editor);
   }
-  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  update_cursor_x(editor, &cur_pos);
   wrefresh(editor->window);
 }
 
@@ -314,7 +303,7 @@ void action_cursor_move_down(Editor *editor) {
     editor->offset_y = cur_pos.row - editor->height + 3;
     repaint_plane(editor);
   }
-  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  update_cursor_x(editor, &cur_pos);
   wrefresh(editor->window);
 }
 
@@ -328,7 +317,7 @@ void action_cursor_move_up(Editor *editor) {
     editor->offset_y = cur_pos.row - 1;
     repaint_plane(editor);
   }
-  update_cursor_x(editor, cur_pos.col, cur_pos.row);
+  update_cursor_x(editor, &cur_pos);
   wrefresh(editor->window);
 }
 
@@ -371,7 +360,7 @@ void action_split_line(Editor *editor) {
 }
 
 /*
- * 😀
+ *
  */
 EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
   const char *key_name = keyname(ch);
@@ -396,9 +385,11 @@ EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
     if (is_key_tab(key_name)) return (EditorAction) {.type = CursorMoveCellRight, .ch = 0};
     if (is_key_up(key_name)) return (EditorAction) {.type = CursorMoveUp, .ch = 0};
   }
-  if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
-  if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
-  if (ch == 127) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+  if (status == OK) {
+    if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
+    if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
+    if (ch == 127) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+  }
   // TODO remove begin
   // remove when not needed anymore
   if (key_name != NULL) {
@@ -495,7 +486,8 @@ void process_keystrokes(Editor *editor) {
  */
 void editor_run(Editor *editor) {
   repaint_plane(editor);
-  update_cursor(editor);
+  Position cur_pos = cursor_pos(editor->plane);
+  update_cursor_x(editor, &cur_pos);
   wrefresh(editor->window);
   process_keystrokes(editor);
 }
