@@ -409,7 +409,8 @@ void cursor_move_down(Plane *plane) {
  * Moves cursor to the beginning of the current cell.
  */
 void cursor_move_cell_start(Plane *plane) {
-  while (plane->cursor != NULL && plane->cursor->left != NULL && !is_box_drawing_character(plane->cursor->left->ch)) {
+  while (plane->cursor != NULL && plane->cursor->left != NULL &&
+         !is_box_drawing_character(plane->cursor->left->ch)) {
     plane->cursor = plane->cursor->left;
   }
 }
@@ -418,8 +419,75 @@ void cursor_move_cell_start(Plane *plane) {
  * Moves cursor to the end of the current cell.
  */
 void cursor_move_cell_end(Plane *plane) {
-  while (plane->cursor != NULL && plane->cursor->right != NULL && !is_box_drawing_character(plane->cursor->right->ch)) {
+  while (plane->cursor != NULL && plane->cursor->right != NULL &&
+         !is_box_drawing_character(plane->cursor->right->ch)) {
     plane->cursor = plane->cursor->right;
+  }
+}
+
+/*
+ * Moves cursor to the top of the current cell.
+ */
+void cursor_move_cell_top(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->up != NULL &&
+         !is_box_drawing_character(plane->cursor->up->ch)) {
+    plane->cursor = plane->cursor->up;
+  }
+}
+
+/*
+ * Moves cursor to the bottom of the current cell.
+ */
+void cursor_move_cell_bottom(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->down != NULL &&
+         !is_box_drawing_character(plane->cursor->down->ch)) {
+    plane->cursor = plane->cursor->down;
+  }
+}
+
+/*
+ * Moves cursor to the beginning of the table.
+ */
+void cursor_move_table_start(Plane *plane) {
+  Box *box = plane->cursor, *last = NULL;
+  while (box != NULL && box->left != NULL) {
+    if (!is_box_drawing_character(box->ch)) last = box;
+    if (box->left->left == NULL) break;
+    box = box->left;
+  }
+  plane->cursor = is_box_drawing_character(box->ch) ? last : box;
+}
+
+/*
+ * Moves cursor to the end of the table.
+ */
+void cursor_move_table_end(Plane *plane) {
+  Box *box = plane->cursor, *last = NULL;
+  while (box != NULL && box->right != NULL) {
+    if (!is_box_drawing_character(box->ch)) last = box;
+    if (box->right->right == NULL) break;
+    box = box->right;
+  }
+  plane->cursor = is_box_drawing_character(box->ch) ? last : box;
+}
+
+/*
+ * Moves cursor to the top of the table.
+ */
+void cursor_move_table_top(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->up != NULL) {
+    if (plane->cursor->up->up == NULL) break;
+    plane->cursor = plane->cursor->left;
+  }
+}
+
+/*
+ * Moves cursor to the end of the table.
+ */
+void cursor_move_table_bottom(Plane *plane) {
+  while (plane->cursor != NULL && plane->cursor->down != NULL) {
+    if (plane->cursor->down->down == NULL) break;
+    plane->cursor = plane->cursor->down;
   }
 }
 

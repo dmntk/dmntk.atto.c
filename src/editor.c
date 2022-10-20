@@ -201,9 +201,9 @@ void update_cursor_coordinates(Editor *editor, const Position *cur_pos, int x, i
 }
 
 /*
- * Updates cursor position.
+ * Updates cursor position on terminal screen.
  */
-void update_cursor_x(Editor *editor, const Position *cur_pos) {
+void update_cursor(Editor *editor, const Position *cur_pos) {
   int x = cur_pos->col - editor->offset_x;
   int y = cur_pos->row - editor->offset_y;
   update_cursor_coordinates(editor, cur_pos, x, y);
@@ -211,7 +211,7 @@ void update_cursor_x(Editor *editor, const Position *cur_pos) {
 }
 
 /*
- * Updates cursor position after moving tho the right.
+ * Updates cursor position after moving to the right.
  */
 void update_cursor_after_moving_right(Editor *editor) {
   Position cur_pos = cursor_pos(editor->plane);
@@ -219,7 +219,43 @@ void update_cursor_after_moving_right(Editor *editor) {
     editor->offset_x = cur_pos.col - editor->width + 2;
     repaint_plane(editor);
   }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor(editor, &cur_pos);
+}
+
+/*
+ * Updates cursor position after moving to the left.
+ */
+void update_cursor_after_moving_left(Editor *editor) {
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.col - editor->offset_x < 1) {
+    editor->offset_x = cur_pos.col - 1;
+    repaint_plane(editor);
+  }
+  update_cursor(editor, &cur_pos);
+}
+
+/*
+ * Updates cursor position after moving up.
+ */
+void update_cursor_after_moving_up(Editor *editor) {
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.row - editor->offset_y < 1) {
+    editor->offset_y = cur_pos.row - 1;
+    repaint_plane(editor);
+  }
+  update_cursor(editor, &cur_pos);
+}
+
+/*
+ * Updates cursor position after moving down.
+ */
+void update_cursor_after_moving_down(Editor *editor) {
+  Position cur_pos = cursor_pos(editor->plane);
+  if (cur_pos.row - editor->offset_y > editor->height - 3) {
+    editor->offset_y = cur_pos.row - editor->height + 3;
+    repaint_plane(editor);
+  }
+  update_cursor(editor, &cur_pos);
 }
 
 /*
@@ -235,58 +271,58 @@ void update_cursor_after_resize(Editor *editor) {
  * Action that performs moving cursor to the next cell to the right from current.
  */
 void action_cursor_move_cell_right(Editor *editor) {
-  debug(editor, "CursorMoveCellRight");
+  cursor_move_cell_end(editor->plane);
+  cursor_move_right(editor->plane);
+  update_cursor_after_moving_right(editor);
 }
 
 /*
  * Action that performs moving cursor to the previous cell to the left from current.
  */
 void action_cursor_move_cell_left(Editor *editor) {
-  debug(editor, "CursorMoveCellLeft");
+  cursor_move_cell_start(editor->plane);
+  cursor_move_left(editor->plane);
+  update_cursor_after_moving_left(editor);
 }
 
 void action_cursor_move_cell_start(Editor *editor) {
   cursor_move_cell_start(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.col - editor->offset_x < 1) {
-    editor->offset_x = cur_pos.col - 1;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_left(editor);
 }
 
 void action_cursor_move_cell_end(Editor *editor) {
   cursor_move_cell_end(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.col - editor->offset_x > editor->width - 2) {
-    editor->offset_x = cur_pos.col - editor->width + 2;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_right(editor);
 }
 
 void action_cursor_move_cell_top(Editor *editor) {
-  debug(editor, "CursorMoveCellTop");
+  cursor_move_cell_top(editor->plane);
+  update_cursor_after_moving_up(editor);
 }
 
 void action_cursor_move_cell_bottom(Editor *editor) {
-  debug(editor, "CursorMoveCellBottom");
+  cursor_move_cell_bottom(editor->plane);
+  update_cursor_after_moving_down(editor);
 }
 
 void action_cursor_move_table_start(Editor *editor) {
-  debug(editor, "CursorMoveTableStart");
+  cursor_move_table_start(editor->plane);
+  update_cursor_after_moving_left(editor);
 }
 
 void action_cursor_move_table_end(Editor *editor) {
-  debug(editor, "CursorMoveTableEnd");
+  cursor_move_table_end(editor->plane);
+  update_cursor_after_moving_right(editor);
 }
 
 void action_cursor_move_table_top(Editor *editor) {
-  debug(editor, "CursorMoveTableTop");
+  cursor_move_table_top(editor->plane);
+  update_cursor_after_moving_up(editor);
 }
 
 void action_cursor_move_table_bottom(Editor *editor) {
-  debug(editor, "CursorMoveTableBottom");
+  cursor_move_table_bottom(editor->plane);
+  update_cursor_after_moving_down(editor);
 }
 
 /*
@@ -294,12 +330,7 @@ void action_cursor_move_table_bottom(Editor *editor) {
  */
 void action_cursor_move_right(Editor *editor) {
   cursor_move_right(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.col - editor->offset_x > editor->width - 2) {
-    editor->offset_x = cur_pos.col - editor->width + 2;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_right(editor);
 }
 
 /*
@@ -307,12 +338,7 @@ void action_cursor_move_right(Editor *editor) {
  */
 void action_cursor_move_left(Editor *editor) {
   cursor_move_left(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.col - editor->offset_x < 1) {
-    editor->offset_x = cur_pos.col - 1;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_left(editor);
 }
 
 /*
@@ -320,12 +346,7 @@ void action_cursor_move_left(Editor *editor) {
  */
 void action_cursor_move_down(Editor *editor) {
   cursor_move_down(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.row - editor->offset_y > editor->height - 3) {
-    editor->offset_y = cur_pos.row - editor->height + 3;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_down(editor);
 }
 
 /*
@@ -333,12 +354,7 @@ void action_cursor_move_down(Editor *editor) {
  */
 void action_cursor_move_up(Editor *editor) {
   cursor_move_up(editor->plane);
-  Position cur_pos = cursor_pos(editor->plane);
-  if (cur_pos.row - editor->offset_y < 1) {
-    editor->offset_y = cur_pos.row - 1;
-    repaint_plane(editor);
-  }
-  update_cursor_x(editor, &cur_pos);
+  update_cursor_after_moving_up(editor);
 }
 
 /*
@@ -507,7 +523,7 @@ void process_keystrokes(Editor *editor) {
 void editor_run(Editor *editor) {
   repaint_plane(editor);
   Position cur_pos = cursor_pos(editor->plane);
-  update_cursor_x(editor, &cur_pos);
+  update_cursor(editor, &cur_pos);
   wrefresh(editor->window);
   process_keystrokes(editor);
 }

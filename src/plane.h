@@ -76,6 +76,24 @@ void cursor_move_cell_start(Plane *plane);
 /* Moves cursor to the end of the current cell. */
 void cursor_move_cell_end(Plane *plane);
 
+/* Moves cursor to the top of the current cell. */
+void cursor_move_cell_top(Plane *plane);
+
+/* Moves cursor to the bottom of the current cell. */
+void cursor_move_cell_bottom(Plane *plane);
+
+/* Moves cursor to the beginning of the table. */
+void cursor_move_table_start(Plane *plane);
+
+/* Moves cursor to the end of the table. */
+void cursor_move_table_end(Plane *plane);
+
+/* Moves cursor to the top of the table. */
+void cursor_move_table_top(Plane *plane);
+
+/* Moves cursor to the end of the table. */
+void cursor_move_table_bottom(Plane *plane);
+
 /* Inserts a character at the current cursor position. */
 void insert_char(Plane *plane, wchar_t ch);
 
