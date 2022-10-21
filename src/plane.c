@@ -541,11 +541,11 @@ void delete_char(Plane *plane) {
   if (plane->cursor == NULL) return;
   Box *box = plane->cursor, *row = NULL, *current = NULL;
   // shift all characters one box left, starting at the current cursor position and ending before the next box-drawing character;
-  // place a whitespace just before the first box-drawing character to the right from current cursor position
   while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
     box->ch = box->right->ch;
     box = box->right;
   }
+  // place a whitespace just before the first box-drawing character to the right from current cursor position
   box->ch = WS;
   // check if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
