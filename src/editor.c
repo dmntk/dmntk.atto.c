@@ -375,11 +375,15 @@ void action_cursor_move_up(Editor *editor) {
  *
  */
 void action_delete_char_under_cursor(Editor *editor) {
-  delete_char_under_cursor(editor->plane);
+  bool cursor_moved = delete_char_under_cursor(editor->plane);
   repaint_plane(editor);
   wrefresh(editor->window);
-  Position cur_pos = cursor_pos(editor->plane);
-  update_cursor(editor, &cur_pos);
+  if (cursor_moved) {
+    update_cursor_after_moving_left(editor);
+  } else {
+    Position cur_pos = cursor_pos(editor->plane);
+    update_cursor(editor, &cur_pos);
+  }
 }
 
 /*

@@ -517,7 +517,7 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
  * then the new cursor pointer is returned.
  */
 Box *delete_char_before_vert_line(Box *cursor) {
-  Box *row = cursor, *box = NULL, *new_cursor = cursor;
+  Box *row = cursor, *box = NULL, *new_cursor = NULL;
   while (row->up != NULL && !is_join(row)) {
     row = row->up;
   }
@@ -637,10 +637,11 @@ void insert_char(Plane *plane, wchar_t ch) {
 
 /*
  * Deletes a character under cursor.
+ * Returns `true` when the cursor position has changed.
  */
-void delete_char_under_cursor(Plane *plane) {
-  if (plane->cursor == NULL) return;
-  Box *box = plane->cursor, *row = NULL, *current = NULL;
+bool delete_char_under_cursor(Plane *plane) {
+  if (plane->cursor == NULL) return false;
+  Box *box = plane->cursor, *new_cursor = NULL;
   // shift all characters one box left, starting at the current cursor position and ending before the next box-drawing character;
   while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
     box->ch = box->right->ch;
@@ -652,9 +653,11 @@ void delete_char_under_cursor(Plane *plane) {
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
   toggle_join_attributes(plane, plane->cursor, OP_DEL);
   if (is_whitespace_column_before_vert_line(plane->cursor)) {
-    plane->cursor = delete_char_before_vert_line(plane->cursor);
+    new_cursor = delete_char_before_vert_line(plane->cursor);
+    if (new_cursor != NULL) plane->cursor = new_cursor;
     fix_vert_pointers(plane);
     update_join(plane);
     update_join_attributes(plane, true);
   }
+  return (new_cursor != NULL);
 }
