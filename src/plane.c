@@ -31,29 +31,43 @@ Plane *plane_new() {
 }
 
 /*
+ *
+ */
+void update_join_attributes(Plane *plane, bool set) {
+  if (plane->join == NULL) return;
+  if (plane->join == plane->start) set = false;
+  Box *col = plane->join;
+  while (col != NULL) {
+    if (set) {
+      col->attr = ATTR_JOIN;
+    } else {
+      col->attr = ATTR_CLEAR;
+    }
+    col = col->right;
+  }
+}
+
+/*
  * Initializes a plane.
  */
 void plane_init(Plane *plane) {
   if (plane->start == NULL) return;
-  Box *row = plane->start; // points currently processed row
-  Box *current; // points currently processed box
-  bool found_join; // flag indicating if the current row is the join between information item name and the body of the table
+  Box *row = plane->start; // points a currently processed row (first box in a row)
+  Box *col;                // points a currently processed column (box in a column)
+  bool found_join;         // flag indicating if the current row is the join between information item name and the body of the table
   while (row != NULL) {
-    current = row;
+    col = row;
     found_join = false;
-    while (current != NULL) {
-      if (is_top_join(current->ch)) {
+    while (col != NULL) {
+      if (is_top_join(col->ch)) {
         found_join = true;
         break;
       }
-      current = current->right;
+      col = col->right;
     }
     if (found_join) {
-      current = row;
-      while (current != NULL) {
-        current->attr |= ATTR_JOIN;
-        current = current->right;
-      }
+      plane->join = row;
+      update_join_attributes(plane, true);
     }
     row = row->down;
   }
@@ -140,6 +154,7 @@ void delete_plane(Plane *plane) {
 void append_row(Plane *plane, Box *row) {
   if (plane->start == NULL) {
     plane->start = row;
+    plane->join = row;
   } else {
     Box *row_last = plane->start;
     while (row_last->down != NULL) {
@@ -453,6 +468,7 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
       if (box->left != NULL && is_box_drawing_character(box->left->ch)) return false;
     }
     row = row->down;
+    if (is_join(row)) break;
   }
   return true;
 }
@@ -478,8 +494,50 @@ Box *delete_char_before_vert_line(Box *cursor) {
     if (box->up != NULL) box->up->down = NULL;
     if (box->down != NULL) box->down->up = NULL;
     free(box);
+    if (is_join(row)) break;
   }
   return new_cursor;
+}
+
+/*
+ * Updates the characters on the joining line between
+ * information item name and the decision table body.
+ */
+void update_join(Plane *plane) {
+  if (plane->join == NULL) return;
+  Box *col = plane->join;
+  while (col != NULL) {
+    if (col->up != NULL && is_single_vert_line(col->up->ch)) {
+      switch (col->ch) {
+        case L'─':
+          col->ch = L'┴';
+          break;
+        case L'┬':
+          col->ch = L'┼';
+          break;
+        case L'┐':
+          col->ch = L'┤';
+          break;
+        default:
+          break;
+      }
+    } else {
+      switch (col->ch) {
+        case L'┴':
+          col->ch = L'─';
+          break;
+        case L'┼':
+          col->ch = L'┬';
+          break;
+        case L'┤':
+          col->ch = L'┐';
+          break;
+        default:
+          break;
+      }
+    }
+    col = col->right;
+  }
 }
 
 /*
@@ -500,6 +558,8 @@ void insert_char(Plane *plane, wchar_t ch) {
       current->ch = current->left->ch;
       current = current->left;
     }
+    // new character replaces the character under the cursor
+    plane->cursor->ch = ch;
   } else {
     // There is no whitespace before the vertical line or the cursor is placed just before the vertical line.
     // A column of whitespaces must be inserted before the vertical line.
@@ -529,9 +589,12 @@ void insert_char(Plane *plane, wchar_t ch) {
       box->ch = box->left->ch;
       box = box->left;
     }
+    // new character replaces the character under the cursor
+    plane->cursor->ch = ch;
+    fix_vert_pointers(plane);
+    update_join(plane);
+    update_join_attributes(plane, true);
   }
-  // new character replaces the character under the cursor
-  plane->cursor->ch = ch;
 }
 
 /*
@@ -552,5 +615,7 @@ void delete_char(Plane *plane) {
   if (is_whitespace_column_before_vert_line(plane->cursor)) {
     plane->cursor = delete_char_before_vert_line(plane->cursor);
     fix_vert_pointers(plane);
+    update_join(plane);
+    update_join_attributes(plane, true);
   }
 }

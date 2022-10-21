@@ -22,7 +22,7 @@ Box *box_new(const wchar_t ch) {
  * joining information item name and table body.
  */
 bool is_join(const Box *box) {
-  return (box->attr & ATTR_JOIN) != 0;
+  return (box != NULL) && ((box->attr & ATTR_JOIN) != 0);
 }
 
 /*

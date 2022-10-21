@@ -394,7 +394,6 @@ void action_delete_char_before(Editor *editor) {
  */
 void action_insert_char(Editor *editor, wchar_t ch) {
   insert_char(editor->plane, ch);
-  fix_vert_pointers(editor->plane);
   repaint_plane(editor);
   action_cursor_move_right(editor);
 }

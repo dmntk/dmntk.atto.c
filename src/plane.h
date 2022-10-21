@@ -5,10 +5,19 @@
 
 /*
  * Plane containing boxes with characters.
+ *
+ *  `start`  - A pointer to the top-left corner of the table;
+ *             it may be the top-left corner of the information item name (when present),
+ *             or the top-left corner of the decision table body (information item name is not present).
+ *  `join`   - A pointer to the first box in a row that is a join between information item name
+ *             and the decision table body. When information item name is not present,
+ *             this points to the top left corner of the decision table (same as `start`).
+ *  `cursor` - A pointer to a box under the cursor.
  */
 typedef struct Plane_t {
-  Box *start;   // the left-top box of the plane
-  Box *cursor;  // box under the cursor
+  Box *start;   // points the left-top box of the plane
+  Box *join;    // point the first box in a row that is a join
+  Box *cursor;  // points box under the cursor
 } Plane;
 
 /*

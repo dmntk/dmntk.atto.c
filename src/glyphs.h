@@ -13,6 +13,8 @@
 
 #define is_top_join(ch)                  ((ch == L'╥'))
 
+#define is_single_vert_line(ch)          ((ch == L'│'))
+
 #define is_vert_line(ch)                 ((ch == L'│') || (ch == L'║'))
 
 #define is_vert_line_left(ch)            ((ch == L'│') || (ch == L'├') || (ch == L'║') || (ch == L'╟'))
