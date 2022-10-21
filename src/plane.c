@@ -20,13 +20,6 @@
  */
 #define move_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
 
-#define C_RED     "\x001b[31m"
-#define C_YELLOW  "\x001b[33m"
-#define C_MAGENTA "\x001b[47m\x001b[31m"
-#define C_RESET   "\x001b[0m"
-#define C_CLEAR   "\x001b[0m"
-#define C_NONE    ""
-
 /*
  * Creates a new empty plane.
  */
@@ -44,18 +37,18 @@ void plane_init(Plane *plane) {
   if (plane->start == NULL) return;
   Box *row = plane->start; // points currently processed row
   Box *current; // points currently processed box
-  bool is_join; // flag indicating if the current row is the join between information item name and the body of the table
+  bool found_join; // flag indicating if the current row is the join between information item name and the body of the table
   while (row != NULL) {
     current = row;
-    is_join = false;
+    found_join = false;
     while (current != NULL) {
       if (is_top_join(current->ch)) {
-        is_join = true;
+        found_join = true;
         break;
       }
       current = current->right;
     }
-    if (is_join) {
+    if (found_join) {
       current = row;
       while (current != NULL) {
         current->attr |= ATTR_JOIN;
@@ -164,41 +157,8 @@ void append_row(Plane *plane, Box *row) {
 }
 
 /*
- * Prints the pointers of all boxes to standard output.
+ * Fixes vertical pointers (`up` and `down`).
  */
-void display_plane_pointers(const Plane *plane) {
-  Box *box, *row = plane->start;
-  bool u, u_ok, r_ok, bottom_ok, down_ok, l_ok;
-  char *s1, *r1, *s2, *r2;
-  while (row != NULL) {
-    box = row;
-    while (box != NULL) {
-      u = box->up != NULL;
-      u_ok = box->up != NULL ? box->up->down != NULL && box->up->down == box : true;
-      s1 = u_ok ? !u ? C_MAGENTA : C_NONE : C_RED;
-      r1 = u_ok ? !u ? C_RESET : C_NONE : C_RESET;
-      printf("┌%s%lc%s┐", s1, u ? L'┴' : L'─', r1);
-      box = box->right;
-    }
-    printf("\n");
-    box = row;
-    while (box != NULL) {
-      l_ok = box->left != NULL;
-      r_ok = box->right != NULL;
-      printf("%lc%lc%lc", l_ok ? L'┤' : L'│', box->ch, r_ok ? L'├' : L'│');
-      box = box->right;
-    }
-    printf("\n");
-    box = row;
-    while (box != NULL) {
-      printf("└%lc┘", box->down != NULL ? L'┬' : L'─');
-      box = box->right;
-    }
-    printf("\n");
-    row = row->down;
-  }
-}
-
 void fix_vert_pointers(const Plane *plane) {
   Box *box, *box_below;
   Box *row = plane->start;
@@ -474,9 +434,12 @@ void cursor_move_table_bottom(Plane *plane) {
   plane->cursor = is_box_drawing_character(box->ch) ? last : box;
 }
 
-bool is_whitespace_column_before_vert_line(Box *pos) {
-  Box *row = pos, *box = NULL;
-  while (row->up != NULL && !IS_JOIN(row->attr)) {
+/*
+ *
+ */
+bool is_whitespace_column_before_vert_line(const Box *current) {
+  const Box *row = current, *box = NULL;
+  while (row->up != NULL && !is_join(row)) {
     row = row->up;
   }
   while (row != NULL) {
@@ -492,6 +455,31 @@ bool is_whitespace_column_before_vert_line(Box *pos) {
     row = row->down;
   }
   return true;
+}
+
+/*
+ * Deletes single character before the first vertical line encountered
+ * to the right from specified cursor position.
+ * When the character under current cursor position is deleted,
+ * then the new cursor pointer is returned.
+ */
+Box *delete_char_before_vert_line(Box *cursor) {
+  Box *row = cursor, *box = NULL, *new_cursor = cursor;
+  while (row->up != NULL && !is_join(row)) {
+    row = row->up;
+  }
+  while (row != NULL) {
+    box = row;
+    row = row->down;
+    move_to_vert_line_crossing(box);
+    if (box == cursor) new_cursor = box->left;
+    if (box->left != NULL) box->left->right = box->right;
+    if (box->right != NULL) box->right->left = box->left;
+    if (box->up != NULL) box->up->down = NULL;
+    if (box->down != NULL) box->down->up = NULL;
+    free(box);
+  }
+  return new_cursor;
 }
 
 /*
@@ -516,7 +504,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     // There is no whitespace before the vertical line or the cursor is placed just before the vertical line.
     // A column of whitespaces must be inserted before the vertical line.
     row = current;
-    while (row->up != NULL && !IS_JOIN(row->attr)) {
+    while (row->up != NULL && !is_join(row)) {
       row = row->up;
     }
     while (row != NULL) {
@@ -531,7 +519,7 @@ void insert_char(Plane *plane, wchar_t ch) {
       box->right->left = ws;
       box->right = ws;
       ws->attr = box->attr;
-      if (row->down != NULL && IS_JOIN(row->down->attr)) break;
+      if (row->down != NULL && is_join(row->down)) break;
       row = row->down;
     }
     // shift all characters the in the current line to the right
@@ -552,20 +540,17 @@ void insert_char(Plane *plane, wchar_t ch) {
 void delete_char(Plane *plane) {
   if (plane->cursor == NULL) return;
   Box *box = plane->cursor, *row = NULL, *current = NULL;
-  // shift all characters left starting at the current cursor position
-  // and ending before the next box-drawing character,
-  // place a whitespace just before the box-drawing character
+  // shift all characters one box left, starting at the current cursor position and ending before the next box-drawing character;
+  // place a whitespace just before the first box-drawing character to the right from current cursor position
   while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
     box->ch = box->right->ch;
     box = box->right;
   }
   box->ch = WS;
-  // move to the top of the information item name or table body
-  row = plane->cursor;
-  while (row->up != NULL && !IS_JOIN(row->attr)) {
-    row = row->up;
-  }
+  // check if before each vertical line there is a minimum one whitespace;
+  // if so, then delete one whitespace before vertical line, and fix vertical pointers
   if (is_whitespace_column_before_vert_line(plane->cursor)) {
-
+    plane->cursor = delete_char_before_vert_line(plane->cursor);
+    fix_vert_pointers(plane);
   }
 }

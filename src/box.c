@@ -6,7 +6,7 @@
 /*
  * Creates a new box initialized with specified character.
  */
-Box *box_new(wchar_t ch) {
+Box *box_new(const wchar_t ch) {
   Box *box = malloc(sizeof(Box));
   box->ch = ch;
   box->attr = ATTR_CLEAR;
@@ -18,16 +18,24 @@ Box *box_new(wchar_t ch) {
 }
 
 /*
+ * Returns `true` when this box is a part of a line
+ * joining information item name and table body.
+ */
+bool is_join(const Box *box) {
+  return (box->attr & ATTR_JOIN) != 0;
+}
+
+/*
  * Returns visual representation of box's attributes.
  */
-wchar_t box_attributes_to_char(Box *box) {
+wchar_t box_attributes_to_char(const Box *box) {
   return (box->attr & ATTR_JOIN) ? L'─' : L'•';
 }
 
 /*
  * Returns visual representation of box's pointers.
  */
-wchar_t box_pointers_to_char(Box *box) {
+wchar_t box_pointers_to_char(const Box *box) {
   bool l_null, r_null, u_null, d_null;
   bool l_ok, r_ok, u_ok, d_ok;
   l_null = box->left == NULL;
