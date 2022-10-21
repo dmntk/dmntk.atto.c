@@ -636,9 +636,9 @@ void insert_char(Plane *plane, wchar_t ch) {
 }
 
 /*
- * Deletes a character at the current cursor position.
+ * Deletes a character under cursor.
  */
-void delete_char(Plane *plane) {
+void delete_char_under_cursor(Plane *plane) {
   if (plane->cursor == NULL) return;
   Box *box = plane->cursor, *row = NULL, *current = NULL;
   // shift all characters one box left, starting at the current cursor position and ending before the next box-drawing character;

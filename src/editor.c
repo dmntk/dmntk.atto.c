@@ -88,8 +88,8 @@ typedef enum EditorActionType_t {
   CursorMoveTableEnd,
   CursorMoveTableTop,
   CursorMoveTableBottom,
-  DeleteChar,
-  DeleteCharBefore,
+  DeleteCharUnderCursor,
+  DeleteCharBeforeCursor,
   InsertChar,
   Nop,
   Quit,
@@ -374,8 +374,8 @@ void action_cursor_move_up(Editor *editor) {
 /*
  *
  */
-void action_delete_char(Editor *editor) {
-  delete_char(editor->plane);
+void action_delete_char_under_cursor(Editor *editor) {
+  delete_char_under_cursor(editor->plane);
   repaint_plane(editor);
   wrefresh(editor->window);
   Position cur_pos = cursor_pos(editor->plane);
@@ -385,7 +385,7 @@ void action_delete_char(Editor *editor) {
 /*
  *
  */
-void action_delete_char_before(Editor *editor) {
+void action_delete_char_before_cursor(Editor *editor) {
   debug(editor, "DeleteCharBefore");
 }
 
@@ -479,13 +479,13 @@ void action_show_editor(Editor *editor) {
 EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
   const char *key_name = keyname(ch);
   if (key_name != NULL) {
-    if (is_key_backspace(key_name)) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+    if (is_key_backspace(key_name)) return (EditorAction) {.type = DeleteCharBeforeCursor, .ch = 0};
     if (is_key_control_end(key_name)) return (EditorAction) {.type = CursorMoveTableEnd, .ch = 0};
     if (is_key_control_home(key_name)) return (EditorAction) {.type = CursorMoveTableStart, .ch = 0};
     if (is_key_control_pg_dn(key_name)) return (EditorAction) {.type = CursorMoveTableBottom, .ch = 0};
     if (is_key_control_pg_up(key_name)) return (EditorAction) {.type = CursorMoveTableTop, .ch = 0};
     if (is_key_control_q(key_name)) return (EditorAction) {.type = Quit, .ch = 0};
-    if (is_key_delete(key_name)) return (EditorAction) {.type = DeleteChar, .ch = 0};
+    if (is_key_delete(key_name)) return (EditorAction) {.type = DeleteCharUnderCursor, .ch = 0};
     if (is_key_down(key_name)) return (EditorAction) {.type = CursorMoveDown, .ch = 0};
     if (is_key_end(key_name)) return (EditorAction) {.type = CursorMoveCellEnd, .ch = 0};
     if (is_key_f1(key_name)) return (EditorAction) {.type = ShowHelp, .ch = 0};
@@ -505,7 +505,7 @@ EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
   if (status == OK) {
     if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
     if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
-    if (ch == 127) return (EditorAction) {.type = DeleteCharBefore, .ch = 0};
+    if (ch == 127) return (EditorAction) {.type = DeleteCharBeforeCursor, .ch = 0};
   }
   // TODO remove begin
   // remove when not needed anymore
@@ -571,11 +571,11 @@ void process_keystrokes(Editor *editor) {
           case CursorMoveTableBottom:
             action_cursor_move_table_bottom(editor);
             break;
-          case DeleteChar:
-            action_delete_char(editor);
+          case DeleteCharUnderCursor:
+            action_delete_char_under_cursor(editor);
             break;
-          case DeleteCharBefore:
-            action_delete_char_before(editor);
+          case DeleteCharBeforeCursor:
+            action_delete_char_before_cursor(editor);
             break;
           case InsertChar:
             action_insert_char(editor, editor_action.ch);
