@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <stdbool.h>
 
 #include "box.h"
 
@@ -14,4 +15,43 @@ Box *box_new(wchar_t ch) {
   box->down = NULL;
   box->left = NULL;
   return box;
+}
+
+/*
+ * Returns visual representation of box's attributes.
+ */
+wchar_t box_attributes_to_char(Box *box) {
+  return (box->attr & ATTR_JOIN) ? L'─' : L'•';
+}
+
+/*
+ * Returns visual representation of box's pointers.
+ */
+wchar_t box_pointers_to_char(Box *box) {
+  bool l_null, r_null, u_null, d_null;
+  bool l_ok, r_ok, u_ok, d_ok;
+  l_null = box->left == NULL;
+  r_null = box->right == NULL;
+  u_null = box->up == NULL;
+  d_null = box->down == NULL;
+  l_ok = !l_null && box->left != NULL && box->left->right != NULL && box->left->right == box;
+  r_ok = !r_null && box->right != NULL && box->right->left != NULL && box->right->left == box;
+  u_ok = !u_null && box->up != NULL && box->up->down != NULL && box->up->down == box;
+  d_ok = !d_null && box->down != NULL && box->down->up != NULL && box->down->up == box;
+  if (!l_ok && !r_ok && !u_ok && !d_ok) return L'•';
+  if (!l_ok && !r_ok && !u_ok && d_ok) return L'╷';
+  if (!l_ok && !r_ok && u_ok && !d_ok) return L'╵';
+  if (!l_ok && !r_ok && u_ok && d_ok) return L'│';
+  if (!l_ok && r_ok && !u_ok && !d_ok) return L'╶';
+  if (!l_ok && r_ok && !u_ok && d_ok) return L'┌';
+  if (!l_ok && r_ok && u_ok && !d_ok) return L'└';
+  if (!l_ok && r_ok && u_ok && d_ok) return L'├';
+  if (l_ok && !r_ok && !u_ok && !d_ok) return L'╴';
+  if (l_ok && !r_ok && !u_ok && d_ok) return L'┐';
+  if (l_ok && !r_ok && u_ok && !d_ok) return L'┘';
+  if (l_ok && !r_ok && u_ok && d_ok) return L'┤';
+  if (l_ok && r_ok && !u_ok && !d_ok) return L'─';
+  if (l_ok && r_ok && !u_ok && d_ok) return L'┬';
+  if (l_ok && r_ok && u_ok && !d_ok) return L'┴';
+  if (l_ok && r_ok && u_ok && d_ok) return L'┼';
 }

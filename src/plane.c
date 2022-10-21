@@ -164,26 +164,6 @@ void append_row(Plane *plane, Box *row) {
 }
 
 /*
- * Prints the attributes of all boxes of the plane to standard output.
- */
-void display_attributes(const Plane *plane) {
-  Box *box, *row = plane->start;
-  while (row != NULL) {
-    box = row;
-    while (box != NULL) {
-      if (box->attr & ATTR_JOIN) {
-        printf("─");
-      } else {
-        printf("*");
-      }
-      box = box->right;
-    }
-    printf("\n");
-    row = row->down;
-  }
-}
-
-/*
  * Prints the pointers of all boxes to standard output.
  */
 void display_plane_pointers(const Plane *plane) {

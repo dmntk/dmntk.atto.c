@@ -405,16 +405,40 @@ void action_insert_char(Editor *editor, wchar_t ch) {
 void action_show_attributes(Editor *editor) {
   editor->state = AttributesView;
   wclear(editor->window);
+  curs_set(0);
   Box *box, *row = editor->plane->start;
+  wchar_t ch;
   int x = 0, y = 0;
   while (row != NULL) {
     box = row;
     while (box != NULL) {
-      if (box->attr & ATTR_JOIN) {
-        mvwaddnwstr(editor->window, y, x, L"─", 1);
-      } else {
-        mvwaddnwstr(editor->window, y, x, L"*", 1);
-      }
+      ch = box_attributes_to_char(box);
+      mvwaddnwstr(editor->window, y, x, &ch, 1);
+      box = box->right;
+      x++;
+    }
+    row = row->down;
+    x = 0;
+    y++;
+  }
+  wrefresh(editor->window);
+}
+
+/*
+ *
+ */
+void action_show_pointers(Editor *editor) {
+  editor->state = PointersView;
+  wclear(editor->window);
+  curs_set(0);
+  Box *box, *row = editor->plane->start;
+  wchar_t ch;
+  int x = 0, y = 0;
+  while (row != NULL) {
+    box = row;
+    while (box != NULL) {
+      ch = box_pointers_to_char(box);
+      mvwaddnwstr(editor->window, y, x, &ch, 1);
       box = box->right;
       x++;
     }
@@ -562,6 +586,9 @@ void process_keystrokes(Editor *editor) {
           case ShowAttributes:
             action_show_attributes(editor);
             break;
+          case ShowPointers:
+            action_show_pointers(editor);
+            break;
           case ShowHelp:
             action_show_help(editor);
             break;
@@ -582,6 +609,12 @@ void process_keystrokes(Editor *editor) {
         switch (editor_action.type) {
           case ShowEditor:
             action_show_editor(editor);
+            break;
+          case ShowAttributes:
+            action_show_attributes(editor);
+            break;
+          case ShowPointers:
+            action_show_pointers(editor);
             break;
           case Quit:
             return;
