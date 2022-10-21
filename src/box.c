@@ -6,10 +6,10 @@
 /*
  * Creates a new box initialized with specified character.
  */
-Box *box_new(const wchar_t ch) {
+Box *box_new(wchar_t ch) {
   Box *box = malloc(sizeof(Box));
   box->ch = ch;
-  box->attr = ATTR_CLEAR;
+  box->attr = ATTR_CLEAR_ALL;
   box->up = NULL;
   box->right = NULL;
   box->down = NULL;

@@ -21,6 +21,12 @@
 #define move_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
 
 /*
+ * Definitions of operations on plane.
+ */
+#define OP_INS 1
+#define OP_DEL 2
+
+/*
  * Creates a new empty plane.
  */
 Plane *plane_new() {
@@ -39,11 +45,42 @@ void update_join_attributes(Plane *plane, bool set) {
   Box *col = plane->join;
   while (col != NULL) {
     if (set) {
-      col->attr = ATTR_JOIN;
+      col->attr |= ATTR_JOIN;
     } else {
-      col->attr = ATTR_CLEAR;
+      col->attr &= ATTR_CLEAR_JOIN;
     }
     col = col->right;
+  }
+}
+
+/*
+ *
+ */
+void toggle_join_attributes(Plane *plane, const Box *current, const unsigned char operation) {
+  if (plane->start == NULL || plane->join == NULL || plane->start == plane->join) return;
+  bool up_side = false, is_end_crossing = false, clear_join_attributes = false;
+  const Box *row = current;
+  while (row != NULL) {
+    if (is_join(row)) {
+      up_side = true;
+      break;
+    }
+    row = row->down;
+  }
+  Box *col = plane->join;
+  while (col != NULL && col->right != NULL) {
+    col = col->right;
+  }
+  is_end_crossing = (col != NULL) && (col->ch == L'┤');
+  clear_join_attributes = ((operation == OP_INS && is_end_crossing) ||
+                           (operation == OP_DEL && !up_side && is_end_crossing));
+  if (clear_join_attributes) {
+    printf("K");
+    col = plane->join;
+    while (col != NULL) {
+      col->attr &= ATTR_CLEAR_JOIN;
+      col = col->right;
+    }
   }
 }
 
@@ -561,6 +598,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     // new character replaces the character under the cursor
     plane->cursor->ch = ch;
   } else {
+    toggle_join_attributes(plane, current, OP_INS);
     // There is no whitespace before the vertical line or the cursor is placed just before the vertical line.
     // A column of whitespaces must be inserted before the vertical line.
     row = current;
@@ -579,10 +617,10 @@ void insert_char(Plane *plane, wchar_t ch) {
       box->right->left = ws;
       box->right = ws;
       ws->attr = box->attr;
-      if (row->down != NULL && is_join(row->down)) break;
       row = row->down;
+      if (is_join(row)) break;
     }
-    // shift all characters the in the current line to the right
+    // shift characters after cursor to the right
     box = plane->cursor;
     move_to_vert_line_left(box);
     while (box != plane->cursor) {
@@ -612,6 +650,7 @@ void delete_char(Plane *plane) {
   box->ch = WS;
   // check if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
+  toggle_join_attributes(plane, plane->cursor, OP_DEL);
   if (is_whitespace_column_before_vert_line(plane->cursor)) {
     plane->cursor = delete_char_before_vert_line(plane->cursor);
     fix_vert_pointers(plane);

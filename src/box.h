@@ -4,8 +4,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define ATTR_CLEAR 0x0000  // Mask used tu clear all attributes.
-#define ATTR_JOIN  0x0001  // Boxes of the line between information item name and the body of the decision table have this attribute set.
+#define ATTR_CLEAR_ALL   0x00  // Mask used tu clear all attributes.
+#define ATTR_JOIN        0x01  // JOIN attribute is set for boxes on the line between information item name and the body of the decision table.
+#define ATTR_CLEAR_JOIN  0xFE  // Mask for clearing JOIN attribute.
 
 /*
  * Box containing a single character.
@@ -20,7 +21,7 @@ typedef struct Box_t {
 } Box;
 
 /* Creates a new box containing specified character. */
-Box *box_new(const wchar_t ch);
+Box *box_new(wchar_t ch);
 
 /* Returns `true` when this box is a part of a line joining information item name and table body. */
 bool is_join(const Box *box);
