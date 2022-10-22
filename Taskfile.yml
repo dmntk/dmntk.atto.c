@@ -7,30 +7,24 @@ tasks:
   build:
     desc: Builds debug target
     cmds:
-      - cmd: ./scripts/build-debug.sh
+      - cmd: ./scripts/debug.sh
 
   clean:
     desc: Cleans all targets
     cmds:
       - cmd: ./scripts/clean.sh
 
-  rebuild-clion:
-    desc: Recreates build system for CLion
-    cmds:
-      - cmd: ./scripts/rebuild-clion.sh
-
   rebuild:
-    desc: Recreates build system in target directory
+    desc: Recreates build systems
     cmds:
-      - cmd: ./scripts/rebuild-debug.sh
-      - cmd: ./scripts/rebuild-release.sh
+      - cmd: ./scripts/rebuild.sh
 
   release:
     desc: Builds release target
     cmds:
-      - cmd: ./scripts/build-release.sh
+      - cmd: ./scripts/release.sh
 
   test:
     desc: Runs tests in debug mode
     cmds:
-      - cmd: ./scripts/test-debug.sh
+      - cmd: ./scripts/test.sh

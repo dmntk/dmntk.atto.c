@@ -1,4 +1,4 @@
-project(plane_tests C)
+project(atto_tests C)
 
 cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 

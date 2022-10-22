@@ -3,8 +3,7 @@
 # project directory
 PROJECT_DIR=$(pwd)
 
-# target directory
-TARGET_DIR=$PROJECT_DIR/target
-
-# build application
-rm -rf "$TARGET_DIR"
+# clean CLion output directories
+rm -rf "$PROJECT_DIR/target"
+rm -rf "$PROJECT_DIR/cmake-build-debug"
+rm -rf "$PROJECT_DIR/cmake-build-release"

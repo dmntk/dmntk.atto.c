@@ -3,11 +3,8 @@
 # project directory
 PROJECT_DIR=$(pwd)
 
-# target directory
-TARGET_DIR=target
-
 # prepare directory for release build
-BUILD_DIR=$PROJECT_DIR/$TARGET_DIR/release
+BUILD_DIR=$PROJECT_DIR/target/release
 
 # build application
 cmake --build "$BUILD_DIR"
