@@ -37,7 +37,8 @@ Plane *plane_new() {
 }
 
 /*
- *
+ * Sets or clears the JOIN attribute for boxes that constitute the join line
+ * between information item name (when present) and the body of the decision table.
  */
 void update_join_attributes(Plane *plane, bool set) {
   if (plane->join == NULL) return;
@@ -486,7 +487,8 @@ void cursor_move_table_bottom(Plane *plane) {
 }
 
 /*
- *
+ * Returns `true` when there are only whitespaces before the vertical line
+ * next to the right from current cursor position.
  */
 bool is_whitespace_column_before_vert_line(const Box *current) {
   const Box *row = current, *box = NULL;
@@ -494,9 +496,11 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
     row = row->up;
   }
   while (row != NULL) {
+    box = NULL;
+    if (!is_box_drawing_character(row->ch)) box = row;
+    else if (row->right != NULL && !is_box_drawing_character(row->right->ch)) box = row->right;
     // check the character, if box-drawing then skip this row
-    if (!is_box_drawing_character(row->ch)) {
-      box = row;
+    if (box != NULL) {
       move_to_vert_line_crossing(box);
       // if there is no whitespace before vertical line, then no further checking is needed
       if (!is_whitespace(box->ch)) return false;
