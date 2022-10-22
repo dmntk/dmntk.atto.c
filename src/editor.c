@@ -390,7 +390,15 @@ void action_delete_char_under_cursor(Editor *editor) {
  *
  */
 void action_delete_char_before_cursor(Editor *editor) {
-  debug(editor, "DeleteCharBefore");
+  bool cursor_moved = delete_char_before_cursor(editor->plane);
+  repaint_plane(editor);
+  wrefresh(editor->window);
+  if (cursor_moved) {
+    update_cursor_after_moving_left(editor);
+  } else {
+    Position cur_pos = cursor_pos(editor->plane);
+    update_cursor(editor, &cur_pos);
+  }
 }
 
 /*
@@ -509,7 +517,7 @@ EditorAction map_key_to_editor_action(Editor *editor, wchar_t ch, int status) {
   if (status == OK) {
     if (ch == 10) return (EditorAction) {.type = SplitLine, .ch = 0};
     if (ch >= 32 && ch <= 126) return (EditorAction) {.type = InsertChar, .ch = (wchar_t) ch};
-    if (ch == 127) return (EditorAction) {.type = DeleteCharBeforeCursor, .ch = 0};
+    //if (ch == 127) return (EditorAction) {.type = DeleteCharBeforeCursor, .ch = 0};
   }
   // TODO remove begin
   // remove when not needed anymore

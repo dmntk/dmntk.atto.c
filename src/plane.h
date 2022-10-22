@@ -106,7 +106,10 @@ void cursor_move_table_bottom(Plane *plane);
 /* Inserts a character at the current cursor position. */
 void insert_char(Plane *plane, wchar_t ch);
 
-/* Deletes a character at the current cursor position. */
+/* Deletes a character under the cursor. */
 bool delete_char_under_cursor(Plane *plane);
+
+/* Deletes a character before the cursor. */
+bool delete_char_before_cursor(Plane *plane);
 
 #endif // PLANE_PLANE_H
