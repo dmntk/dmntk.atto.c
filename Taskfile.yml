@@ -14,13 +14,13 @@ tasks:
     cmds:
       - cmd: ./scripts/clean.sh
 
-  clion:
+  rebuild-clion:
     desc: Recreates build system for CLion
     cmds:
       - cmd: ./scripts/rebuild-clion.sh
 
   rebuild:
-    desc: Recreates all build systems
+    desc: Recreates build system in target directory
     cmds:
       - cmd: ./scripts/rebuild-debug.sh
       - cmd: ./scripts/rebuild-release.sh
