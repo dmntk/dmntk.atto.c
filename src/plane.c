@@ -701,9 +701,23 @@ bool delete_char_before_cursor(Plane *plane) {
 /* Splits current line at cursor position. */
 void split_line(Plane *plane) {
   if (plane->cursor == NULL) return;
-  Box *box = plane->cursor, *current = plane->cursor;
-  // move to the left, until right vertical line is encountered
+  Box *box = plane->cursor, *l_box = plane->cursor, *r_box = plane->cursor, *current = plane->cursor;
+
+  // move l_box to the left, until right-vertical line is encountered
+  move_left_to_vert_line(l_box);
+  // move r_box to the right, until left-vertical line is encountered
+  move_right_to_vert_line(r_box);
+  // move l_box and r_bod down until next horizontal line is encountered
+  while (l_box != NULL && r_box != NULL && l_box->down != NULL && r_box->down != NULL &&
+         !is_box_drawing_character(l_box->down->ch)) {
+    l_box = l_box->down;
+    r_box = r_box->down;
+  }
+  // check, if the last line has only spaces
+
+  // move box to the left, until right vertical line is encountered
   move_left_to_vert_line(box);
+  // move the
   box = box->down;
   if (box != NULL) plane->cursor = box;
   while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
