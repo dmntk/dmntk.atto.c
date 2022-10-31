@@ -694,3 +694,8 @@ bool delete_char_before_cursor(Plane *plane) {
   update_join_attributes(plane, true);
   return (new_cursor != NULL);
 }
+
+/* Splits current line at cursor position. */
+void split_line(Plane *plane) {
+  if (plane->cursor == NULL) return;
+}

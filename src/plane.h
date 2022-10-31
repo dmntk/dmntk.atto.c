@@ -112,4 +112,7 @@ bool delete_char_under_cursor(Plane *plane);
 /* Deletes a character before the cursor. */
 bool delete_char_before_cursor(Plane *plane);
 
+/* Splits current line at cursor position. */
+void split_line(Plane *plane);
+
 #endif // PLANE_PLANE_H

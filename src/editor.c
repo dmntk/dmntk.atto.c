@@ -463,6 +463,17 @@ void action_show_pointers(Editor *editor) {
 /*
  *
  */
+void action_show_editor(Editor *editor) {
+  editor->state = EditorView;
+  repaint_plane(editor);
+  Position cur_pos = cursor_pos(editor->plane);
+  update_cursor(editor, &cur_pos);
+  wrefresh(editor->window);
+}
+
+/*
+ *
+ */
 void action_show_help(Editor *editor) {
   debug(editor, "ShowHelp");
 }
@@ -471,18 +482,7 @@ void action_show_help(Editor *editor) {
  *
  */
 void action_split_line(Editor *editor) {
-  debug(editor, "SplitLine");
-}
-
-/*
- *
- */
-void action_show_editor(Editor *editor) {
-  editor->state = EditorView;
-  repaint_plane(editor);
-  Position cur_pos = cursor_pos(editor->plane);
-  update_cursor(editor, &cur_pos);
-  wrefresh(editor->window);
+  split_line(editor->plane);
 }
 
 /*
