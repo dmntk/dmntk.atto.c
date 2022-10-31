@@ -483,6 +483,10 @@ void action_show_help(Editor *editor) {
  */
 void action_split_line(Editor *editor) {
   split_line(editor->plane);
+  repaint_plane(editor);
+  Position cur_pos = cursor_pos(editor->plane);
+  update_cursor(editor, &cur_pos);
+  wrefresh(editor->window);
 }
 
 /*

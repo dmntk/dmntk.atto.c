@@ -9,16 +9,19 @@
 #define LOAD_BUFFER_SIZE 5000
 
 /*
- * Moves the specified box pointer to the right,
- * until the left-vertical line is encountered.
+ * Moves the specified box pointer to the right, until the left-vertical line is encountered.
  */
-#define move_to_vert_line_left(box)      while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
+#define move_right_to_vert_line(box)      while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
 
 /*
- * Moves the specified box pointer to the right,
- * until the vertical line or crossing is encountered.
+ * Moves the specified box pointer to the right, until the vertical line or crossing is encountered.
  */
-#define move_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
+#define move_right_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
+
+/*
+ * Moves the specified box pointer to the left, until the right-vertical line is encountered.
+ */
+#define move_left_to_vert_line(box)      while (box != NULL && box->left != NULL && !is_vert_line_right(box->left->ch)) box = box->left
 
 /*
  * Definitions of operations on plane.
@@ -501,7 +504,7 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
     else if (row->right != NULL && !is_box_drawing_character(row->right->ch)) box = row->right;
     // check the character, if box-drawing then skip this row
     if (box != NULL) {
-      move_to_vert_line_crossing(box);
+      move_right_to_vert_line_crossing(box);
       // if there is no whitespace before vertical line, then no further checking is needed
       if (!is_whitespace(box->ch)) return false;
       // if there is a whitespace, but just between two box-drawing characters, then no further checking is needed
@@ -527,7 +530,7 @@ Box *delete_char_before_vert_line(Box *cursor) {
   while (row != NULL) {
     box = row;
     row = row->down;
-    move_to_vert_line_crossing(box);
+    move_right_to_vert_line_crossing(box);
     if (box->left != NULL && box == cursor) new_cursor = box->left;
     if (box->left != NULL) box->left->right = box->right;
     if (box->right != NULL) box->right->left = box->left;
@@ -590,7 +593,7 @@ void insert_char(Plane *plane, wchar_t ch) {
   if (plane->cursor == NULL) return;
   Box *box = NULL, *row = NULL, *current = plane->cursor;
   // move to the right (sic!) until left (sic!) vertical line is encountered
-  move_to_vert_line_left(current);
+  move_right_to_vert_line(current);
   if (is_whitespace(current->ch) && current != plane->cursor) {
     // there is a whitespace before the vertical line,
     // all characters starting from current cursor position may be simply shifted right
@@ -610,7 +613,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     }
     while (row != NULL) {
       box = row;
-      move_to_vert_line_crossing(box);
+      move_right_to_vert_line_crossing(box);
       wchar_t new_char = WS;
       if is_single_vert_line_crossing(box->right->ch) new_char = SINGLE_HORZ_LINE;
       if is_double_vert_line_crossing(box->right->ch) new_char = DOUBLE_HORZ_LINE;
@@ -625,7 +628,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     }
     // shift characters after cursor to the right
     box = plane->cursor;
-    move_to_vert_line_left(box);
+    move_right_to_vert_line(box);
     while (box != plane->cursor) {
       box->ch = box->left->ch;
       box = box->left;
@@ -698,4 +701,15 @@ bool delete_char_before_cursor(Plane *plane) {
 /* Splits current line at cursor position. */
 void split_line(Plane *plane) {
   if (plane->cursor == NULL) return;
+  Box *box = plane->cursor, *current = plane->cursor;
+  // move to the left, until right vertical line is encountered
+  move_left_to_vert_line(box);
+  box = box->down;
+  if (box != NULL) plane->cursor = box;
+  while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
+    box->ch = current->ch;
+    current->ch = WS;
+    current = current->right;
+    box = box->right;
+  }
 }
