@@ -7,7 +7,7 @@
 static char app_name[] = "plane";
 
 /* Application version. */
-const char *argp_program_version = "v0.0.1";
+const char *argp_program_version = "v0.0.2";
 
 /* Application bug reporting address. */
 const char *argp_program_bug_address = "<plane@plane.io>";
