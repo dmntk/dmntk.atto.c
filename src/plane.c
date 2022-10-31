@@ -698,7 +698,9 @@ bool delete_char_before_cursor(Plane *plane) {
   return (new_cursor != NULL);
 }
 
-/* Splits current line at cursor position. */
+/*
+ * Splits current line at cursor position.
+ */
 void split_line(Plane *plane) {
   if (plane->cursor == NULL) return;
   Box *box = plane->cursor, *l_box = plane->cursor, *r_box = plane->cursor, *current = NULL;
