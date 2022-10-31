@@ -701,7 +701,7 @@ bool delete_char_before_cursor(Plane *plane) {
 /* Splits current line at cursor position. */
 void split_line(Plane *plane) {
   if (plane->cursor == NULL) return;
-  Box *box = plane->cursor, *l_box = plane->cursor, *r_box = plane->cursor, *current = plane->cursor;
+  Box *box = plane->cursor, *l_box = plane->cursor, *r_box = plane->cursor, *current = NULL;
 
   // move l_box to the left, until right-vertical line is encountered
   move_left_to_vert_line(l_box);
@@ -714,16 +714,32 @@ void split_line(Plane *plane) {
     r_box = r_box->down;
   }
   // check, if the last line has only spaces
-
-  // move box to the left, until right vertical line is encountered
-  move_left_to_vert_line(box);
-  // move the
-  box = box->down;
-  if (box != NULL) plane->cursor = box;
-  while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
-    box->ch = current->ch;
-    current->ch = WS;
+  bool only_spaces = true;
+  current = l_box;
+  while (current != NULL && current != r_box) {
+    if (!is_whitespace(current->ch)) {
+      only_spaces = false;
+      break;
+    }
     current = current->right;
-    box = box->right;
   }
+  l_box->ch = L'#';
+  r_box->ch = L'^';
+  if (only_spaces) {
+    l_box->ch = L'*';
+    r_box->ch = L'$';
+  }
+
+//  // move box to the left, until right vertical line is encountered
+//  move_left_to_vert_line(box);
+//  // move the
+//  box = box->down;
+//  if (box != NULL) plane->cursor = box;
+//  current = plane->cursor;
+//  while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
+//    box->ch = current->ch;
+//    current->ch = WS;
+//    current = current->right;
+//    box = box->right;
+//  }
 }
