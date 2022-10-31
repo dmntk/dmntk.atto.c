@@ -178,27 +178,40 @@ void editor_delete(Editor *editor) {
  * Repaints the plane.
  */
 void repaint_plane(Editor *editor) {
-  curs_set(0);
-  wclear(editor->window);
+  curs_set(0); // hide cursor
   Box *box = NULL, *row = editor->plane->start;
   int x = 0, y = 0, col_count = 0, row_count = 0;
+  // move to first 'visible' row
   for (int i = editor->offset_y; i > 0 && row->down != NULL; --i) row = row->down;
   while (row != NULL && row_count < editor->height - 1) {
     box = row;
+    // move to first 'visible' column
     for (int i = editor->offset_x; i > 0 && box != NULL; --i) box = box->right;
+    // paint 'visible' characters
     while (box != NULL && col_count < editor->width) {
       mvwaddnwstr(editor->window, y, x, &box->ch, 1);
       box = box->right;
       col_count++;
       x++;
     }
+    // clear all remaining characters up to the end of the line
+    wmove(editor->window, y, x);
+    wclrtoeol(editor->window);
+    // move to next row
     row = row->down;
     row_count++;
-    col_count = 0;
     y++;
+    col_count = 0;
     x = 0;
   }
-  curs_set(1);
+  // clear all remaining empty space below the last row (except the status bar)
+  while (row_count < editor->height - 1) {
+    wmove(editor->window, y, 0);
+    wclrtoeol(editor->window);
+    row_count++;
+    y++;
+  }
+  curs_set(1); // show cursor
 }
 
 /*
