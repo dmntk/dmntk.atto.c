@@ -9,19 +9,28 @@
 #define LOAD_BUFFER_SIZE 5000
 
 /*
- * Moves the specified box pointer to the right, until the left-vertical line is encountered.
+ * Moves the specified box pointer to the right,
+ * until the left-vertical line is encountered.
  */
-#define move_right_to_vert_line(box)      while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
+#define move_right_to_vert_line(box) while (box != NULL && box->right != NULL && !is_vert_line_left(box->right->ch)) box = box->right
 
 /*
- * Moves the specified box pointer to the right, until the vertical line or crossing is encountered.
+ * Moves the specified box pointer to the left,
+ * until the right-vertical line is encountered.
  */
-#define move_right_to_vert_line_crossing(box)  while (box != NULL && box->right != NULL && !is_vert_line_crossing(box->right->ch)) box = box->right
+#define move_left_to_vert_line(box) while (box != NULL && box->left != NULL && !is_vert_line_right(box->left->ch)) box = box->left
 
 /*
- * Moves the specified box pointer to the left, until the right-vertical line is encountered.
+ * Moves the specified box pointer to the right,
+ * until the vertical line or crossing is encountered.
  */
-#define move_left_to_vert_line(box)      while (box != NULL && box->left != NULL && !is_vert_line_right(box->left->ch)) box = box->left
+#define move_right_to_vert_line_or_crossing(box) while (box != NULL && box->right != NULL && !is_vert_line_or_crossing(box->right->ch)) box = box->right
+
+/*
+ * Moves the specified box pointer down, until the horizontal line
+ * or crossing is encountered below the box pointer.
+ */
+#define move_down_to_horz_line_or_crossing(box) while (box != NULL && box->down != NULL && !is_horz_line_or_crossing(box->down->ch)) box = box->down
 
 /*
  * Definitions of operations on plane.
@@ -213,6 +222,7 @@ void append_row(Plane *plane, Box *row) {
 
 /*
  * Fixes vertical pointers (`up` and `down`).
+ * Fixing vertical pointers is done row by row from left to right.
  */
 void fix_vert_pointers(const Plane *plane) {
   Box *box, *box_below;
@@ -237,6 +247,39 @@ void fix_vert_pointers(const Plane *plane) {
     }
     row = row_below;
     row_below = row_below->down;
+  }
+}
+
+/*
+ * Fixes horizontal pointers (`left` and `right`).
+ * Fixing horizontal pointers is done column by column from bottom to top.
+ */
+void fix_horz_pointers(const Plane *plane) {
+  Box *box = NULL, *box_right = NULL;
+  Box *row = plane->start;
+  while (row->down != NULL) {
+    row = row->down;
+  }
+  Box *row_right = row != NULL ? row->right : NULL;
+  while (row != NULL && row_right != NULL) {
+    box = row;
+    box_right = row_right;
+    while (box != NULL && box_right != NULL) {
+      box->right = box_right;
+      box_right->left = box;
+      box = box->up;
+      box_right = box_right->up;
+    }
+    while (box != NULL) {
+      box->right = NULL;
+      box = box->up;
+    }
+    while (box_right != NULL) {
+      box_right->left = NULL;
+      box_right = box_right->up;
+    }
+    row = row_right;
+    row_right = row_right->right;
   }
 }
 
@@ -504,7 +547,7 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
     else if (row->right != NULL && !is_box_drawing_character(row->right->ch)) box = row->right;
     // check the character, if box-drawing then skip this row
     if (box != NULL) {
-      move_right_to_vert_line_crossing(box);
+      move_right_to_vert_line_or_crossing(box);
       // if there is no whitespace before vertical line, then no further checking is needed
       if (!is_whitespace(box->ch)) return false;
       // if there is a whitespace, but just between two box-drawing characters, then no further checking is needed
@@ -530,7 +573,7 @@ Box *delete_char_before_vert_line(Box *cursor) {
   while (row != NULL) {
     box = row;
     row = row->down;
-    move_right_to_vert_line_crossing(box);
+    move_right_to_vert_line_or_crossing(box);
     if (box->left != NULL && box == cursor) new_cursor = box->left;
     if (box->left != NULL) box->left->right = box->right;
     if (box->right != NULL) box->right->left = box->left;
@@ -613,7 +656,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     }
     while (row != NULL) {
       box = row;
-      move_right_to_vert_line_crossing(box);
+      move_right_to_vert_line_or_crossing(box);
       wchar_t new_char = WS;
       if is_single_vert_line_crossing(box->right->ch) new_char = SINGLE_HORZ_LINE;
       if is_double_vert_line_crossing(box->right->ch) new_char = DOUBLE_HORZ_LINE;
@@ -703,45 +746,71 @@ bool delete_char_before_cursor(Plane *plane) {
  */
 void split_line(Plane *plane) {
   if (plane->cursor == NULL) return;
-  Box *box = plane->cursor, *l_box = plane->cursor, *r_box = plane->cursor, *current = NULL;
-
-  // move l_box to the left, until right-vertical line is encountered
-  move_left_to_vert_line(l_box);
-  // move r_box to the right, until left-vertical line is encountered
-  move_right_to_vert_line(r_box);
-  // move l_box and r_bod down until next horizontal line is encountered
-  while (l_box != NULL && r_box != NULL && l_box->down != NULL && r_box->down != NULL &&
-         !is_box_drawing_character(l_box->down->ch)) {
+  Box *box = plane->cursor, *l_box = NULL, *row = NULL, *r_box = NULL, *current = NULL;
+  // move box to the left, until right-vertical line is encountered
+  move_left_to_vert_line(box);
+  l_box = box;
+  // move l_box down until next box drawing character is encountered
+  while (l_box != NULL && l_box->down != NULL && !is_box_drawing_character(l_box->down->ch)) {
     l_box = l_box->down;
-    r_box = r_box->down;
   }
-  // check, if the last line has only spaces
-  bool only_spaces = true;
+  bool c1 = (l_box == box);
+  bool c2 = (l_box->up == box);
+  bool c3 = true;
+  // check, if the last line contains only whitespaces
   current = l_box;
-  while (current != NULL && current != r_box) {
+  while (current != NULL && !is_box_drawing_character(current->ch)) {
     if (!is_whitespace(current->ch)) {
-      only_spaces = false;
+      c3 = false;
       break;
     }
     current = current->right;
   }
-  l_box->ch = L'#';
-  r_box->ch = L'^';
-  if (only_spaces) {
-    l_box->ch = L'*';
-    r_box->ch = L'$';
+  // insert whitespaces before next horizontal line when needed
+  if ((!c2 && !c3) || (c1 && !c2) || (!c1 && !c3)) {
+    row = plane->cursor;
+    while (row->left != NULL) {
+      row = row->left;
+    }
+    while (row != NULL) {
+      r_box = row;
+      move_down_to_horz_line_or_crossing(r_box);
+      wchar_t new_char = WS;
+      if is_single_horz_line_crossing(r_box->down->ch) new_char = SINGLE_VERT_LINE;
+      if is_double_horz_line_crossing(r_box->down->ch) new_char = DOUBLE_VERT_LINE;
+      Box *ws = box_new(new_char);
+      ws->up = r_box;
+      ws->down = r_box->down;
+      r_box->down->up = ws;
+      r_box->down = ws;
+      ws->attr = r_box->attr;
+      row = row->right;
+    }
+    fix_horz_pointers(plane);
+    l_box = l_box->down;
   }
-
-//  // move box to the left, until right vertical line is encountered
-//  move_left_to_vert_line(box);
-//  // move the
-//  box = box->down;
-//  if (box != NULL) plane->cursor = box;
-//  current = plane->cursor;
-//  while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
-//    box->ch = current->ch;
-//    current->ch = WS;
-//    current = current->right;
-//    box = box->right;
-//  }
+  // shift content down when needed
+  if ((!c1 && !c2) || (!c1 && !c3)) {
+    while (l_box != NULL && l_box->up != NULL && l_box->up != box) {
+      r_box = l_box;
+      current = r_box->up;
+      while (r_box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
+        r_box->ch = current->ch;
+        current->ch = WS;
+        r_box = r_box->right;
+        current = current->right;
+      }
+      l_box = l_box->up;
+    }
+  }
+  // split the line at cursor position
+  current = plane->cursor;
+  box = box->down;
+  if (box != NULL) plane->cursor = box;
+  while (box != NULL && current != NULL && !is_box_drawing_character(current->ch)) {
+    box->ch = current->ch;
+    current->ch = WS;
+    current = current->right;
+    box = box->right;
+  }
 }

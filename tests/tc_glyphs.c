@@ -12,18 +12,13 @@ int tc_glyphs() {
   ASSERT_TRUE(is_top_join(L'╥'));
   ASSERT_FALSE(is_top_join(L'╨'));
 
-  // plain vertical line
-  ASSERT_TRUE(is_vert_line(L'│'));
-  ASSERT_TRUE(is_vert_line(L'║'));
-  ASSERT_FALSE(is_vert_line(L'═'));
-
   // vertical line seen from the left side
   ASSERT_TRUE(is_vert_line_left(L'│'));
   ASSERT_TRUE(is_vert_line_left(L'├'));
   ASSERT_TRUE(is_vert_line_left(L'║'));
   ASSERT_TRUE(is_vert_line_left(L'╟'));
 
-  // plain horizontal line seen from the top side
+  // horizontal line seen from the top side
   ASSERT_TRUE(is_horz_line_top(L'─'));
   ASSERT_TRUE(is_horz_line_top(L'┬'));
   ASSERT_TRUE(is_horz_line_top(L'╥'));
@@ -32,7 +27,7 @@ int tc_glyphs() {
   ASSERT_FALSE(is_horz_line_top(L'│'));
   ASSERT_FALSE(is_horz_line_top(L'║'));
 
-  // plain horizontal line seen from the bottom side
+  // horizontal line seen from the bottom side
   ASSERT_TRUE(is_horz_line_bottom(L'─'));
   ASSERT_TRUE(is_horz_line_bottom(L'┴'));
   ASSERT_TRUE(is_horz_line_bottom(L'╨'));
