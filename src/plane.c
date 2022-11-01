@@ -789,7 +789,7 @@ void split_line(Plane *plane) {
     fix_horz_pointers(plane);
     l_box = l_box->down;
   }
-  // shift content down when needed
+  // shift lines down when needed
   if ((!c1 && !c2) || (!c1 && !c3)) {
     while (l_box != NULL && l_box->up != NULL && l_box->up != box) {
       r_box = l_box;
