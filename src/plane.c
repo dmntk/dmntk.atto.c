@@ -712,12 +712,38 @@ bool delete_char_under_cursor(Plane *plane) {
 }
 
 /*
+ * Returns `true` when all the characters starting from specified box pointer
+ * are whitespaces, until the box-drawing character is encountered.
+ */
+bool is_empty_line(Box *box) {
+  if (box == NULL) return false;
+  while (box != NULL && !is_box_drawing_character(box->ch)) {
+    if (!is_whitespace(box->ch)) {
+      return false;
+    }
+    box = box->right;
+  }
+  return true;
+}
+
+/*
+ * Deletes a line when contains only whitespaces and the cursor is placed directly
+ * to the right of the box drawing character.
+ */
+bool delete_line_at_cursor_position(Plane *plane) {
+  //
+  return false;
+}
+
+/*
  * Deletes a character before the cursor.
  * Returns `true` when the cursor position has been changed by this function.
  */
 bool delete_char_before_cursor(Plane *plane) {
   if (plane->cursor == NULL && plane->cursor->left != NULL) return false;
-  if (is_box_drawing_character(plane->cursor->left->ch)) return false;
+  if (is_box_drawing_character(plane->cursor->left->ch)) {
+    return delete_line_at_cursor_position(plane);
+  }
   Box *box = plane->cursor->left, *new_cursor = NULL;
   // shift characters one box left
   while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
@@ -756,16 +782,7 @@ void split_line(Plane *plane) {
   }
   bool c1 = (l_box == box);
   bool c2 = (l_box->up == box);
-  bool c3 = true;
-  // check, if the last line contains only whitespaces
-  current = l_box;
-  while (current != NULL && !is_box_drawing_character(current->ch)) {
-    if (!is_whitespace(current->ch)) {
-      c3 = false;
-      break;
-    }
-    current = current->right;
-  }
+  bool c3 = is_empty_line(l_box);
   // insert whitespaces before next horizontal line when needed
   if ((!c2 && !c3) || (c1 && !c2) || (!c1 && !c3)) {
     row = plane->cursor;
