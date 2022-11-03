@@ -539,10 +539,10 @@ void cursor_move_table_bottom(Plane *plane) {
 }
 
 /*
- * Returns `true` when there are only whitespaces before the vertical line
- * next to the right from current cursor position.
+ * Returns `true` when there are only whitespaces before the nearest
+ * vertical line to the right from the specified box pointer.
  */
-bool is_whitespace_column_before_vert_line(const Box *current) {
+bool only_whitespaces_before_vert_line(const Box *current) {
   const Box *row = current, *box = NULL;
   while (row->up != NULL && !is_join(row)) {
     row = row->up;
@@ -571,25 +571,73 @@ bool is_whitespace_column_before_vert_line(const Box *current) {
  * When the character under current cursor position is deleted,
  * then the new cursor pointer is returned.
  */
-Box *delete_char_before_vert_line(Box *cursor) {
-  Box *row = cursor, *box = NULL, *new_cursor = NULL;
+Box *delete_character_before_vert_line(Box *cursor) {
+  Box *row = cursor, *current = NULL, *new_cursor = NULL;
   while (row->up != NULL && !is_join(row)) {
     row = row->up;
   }
   while (row != NULL) {
-    box = row;
+    current = row;
     row = row->down;
-    move_right_to_vert_line_or_crossing(box);
-    if (box->left != NULL && box == cursor) new_cursor = box->left;
-    if (box->left != NULL) box->left->right = box->right;
-    if (box->right != NULL) box->right->left = box->left;
-    if (box->up != NULL) box->up->down = NULL;
-    if (box->down != NULL) box->down->up = NULL;
-    free(box);
+    move_right_to_vert_line_or_crossing(current);
+    if (current->left != NULL && current == cursor) new_cursor = current->left;
+    if (current->left != NULL) current->left->right = current->right;
+    if (current->right != NULL) current->right->left = current->left;
+    if (current->up != NULL) current->up->down = NULL;
+    if (current->down != NULL) current->down->up = NULL;
+    free(current);
     if (is_join(row)) break;
   }
   return new_cursor;
 }
+
+/*
+ * Returns `true` when there are only whitespaces above the nearest
+ * horizontal line below the specified box pointer.
+ */
+bool only_whitespaces_above_horz_line(const Box *box) {
+  if (box == NULL) return false;
+  const Box *col = box, *current = NULL;
+  while (col->left != NULL) {
+    col = col->left;
+  }
+  while (col != NULL) {
+    current = NULL;
+    if (!is_box_drawing_character(col->ch)) current = col;
+    else if (col->down != NULL && !is_box_drawing_character(col->down->ch)) current = col->down;
+    if (current != NULL) {
+      move_down_to_horz_line_or_crossing(current);
+      if (!is_whitespace(current->ch)) return false;
+      if (current->up != NULL && is_box_drawing_character(current->up->ch)) return false;
+    }
+    col = col->right;
+  }
+  return true;
+}
+
+/*
+ *
+ */
+Box *delete_character_above_horz_line(Box *cursor) {
+  if (cursor == NULL) return NULL;
+  Box *col = cursor, *current = NULL, *new_cursor = NULL;
+  while (col->left != NULL) {
+    col = col->left;
+  }
+  while (col != NULL) {
+    current = col;
+    col = col->right;
+    move_down_to_horz_line_or_crossing(current);
+    if (current->up != NULL && current == cursor) new_cursor = current->up;
+    if (current->up != NULL) current->up->down = current->down;
+    if (current->down != NULL) current->down->up = current->up;
+    if (current->left != NULL) current->left->right = NULL;
+    if (current->right != NULL) current->right->left = NULL;
+    free(current);
+  }
+  return new_cursor;
+}
+
 
 /*
  * Updates the characters on the joining line between
@@ -707,8 +755,8 @@ bool delete_char_under_cursor(Plane *plane) {
   // check, if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
   toggle_join_attributes(plane, plane->cursor, OP_DEL);
-  if (is_whitespace_column_before_vert_line(plane->cursor)) {
-    new_cursor = delete_char_before_vert_line(plane->cursor);
+  if (only_whitespaces_before_vert_line(plane->cursor)) {
+    new_cursor = delete_character_before_vert_line(plane->cursor);
     if (new_cursor != NULL) plane->cursor = new_cursor;
     fix_vert_pointers(plane);
     update_join(plane);
@@ -772,13 +820,20 @@ void delete_line(Plane *plane) {
  */
 bool delete_char_before_cursor(Plane *plane) {
   if (plane->cursor == NULL && plane->cursor->left != NULL) return false;
+  Box *new_cursor = NULL;
   if (is_box_drawing_character(plane->cursor->left->ch)) {
     if (is_empty_line(plane->cursor)) {
       delete_line(plane);
+      if (only_whitespaces_above_horz_line(plane->cursor)) {
+        new_cursor = delete_character_above_horz_line(plane->cursor);
+        if (new_cursor != NULL) plane->cursor = new_cursor;
+        fix_horz_pointers(plane);
+        return (new_cursor != NULL);
+      }
     }
     return false;
   }
-  Box *box = plane->cursor->left, *new_cursor = NULL;
+  Box *box = plane->cursor->left;
   // shift characters one box left
   while (box->right != NULL && !is_box_drawing_character(box->right->ch)) {
     box->ch = box->right->ch;
@@ -789,8 +844,8 @@ bool delete_char_before_cursor(Plane *plane) {
   // check, if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
   toggle_join_attributes(plane, plane->cursor, OP_DEL);
-  if (is_whitespace_column_before_vert_line(plane->cursor)) {
-    new_cursor = delete_char_before_vert_line(plane->cursor);
+  if (only_whitespaces_before_vert_line(plane->cursor)) {
+    new_cursor = delete_character_before_vert_line(plane->cursor);
     plane->cursor = new_cursor != NULL ? new_cursor : plane->cursor->left;
     fix_vert_pointers(plane);
     update_join(plane);
