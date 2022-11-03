@@ -33,6 +33,12 @@
 #define move_down_to_horz_line_or_crossing(box) while (box != NULL && box->down != NULL && !is_horz_line_or_crossing(box->down->ch)) box = box->down
 
 /*
+ * Moves the specified box pointer down,
+ * until the horizontal line is encountered.
+ */
+#define move_down_to_horz_line(box) while (box != NULL && box->down != NULL && !is_horz_line_top(box->down->ch)) box = box->down
+
+/*
  * Definitions of operations on plane.
  */
 #define OP_INS 1
@@ -712,8 +718,8 @@ bool delete_char_under_cursor(Plane *plane) {
 }
 
 /*
- * Returns `true` when all the characters starting from specified box pointer
- * are whitespaces, until the box-drawing character is encountered.
+ * Returns `true` when all the characters starting from specified box are whitespaces,
+ * until the box-drawing character is encountered.
  */
 bool is_empty_line(Box *box) {
   if (box == NULL) return false;
@@ -727,12 +733,37 @@ bool is_empty_line(Box *box) {
 }
 
 /*
- * Deletes a line when contains only whitespaces and the cursor is placed directly
- * to the right of the box drawing character.
+ *
  */
-bool delete_line_at_cursor_position(Plane *plane) {
-  //
-  return false;
+void shift_lines_up(Box *top_box, Box *bottom_box) {
+  if (top_box == NULL || bottom_box == NULL) return;
+  Box *upper_box = NULL, *lower_box = NULL;
+  while (top_box != NULL && top_box != bottom_box) {
+    upper_box = top_box;
+    lower_box = upper_box->down;
+    while (upper_box != NULL &&
+           lower_box != NULL &&
+           !is_vert_line_left(upper_box->ch) &&
+           !is_vert_line_left(lower_box->ch)) {
+      upper_box->ch = lower_box->ch;
+      lower_box->ch = WS;
+      upper_box = upper_box->right;
+      lower_box = lower_box->right;
+    }
+    top_box = top_box->down;
+  }
+}
+
+/*
+ * Deletes a single line at cursor position.
+ */
+void delete_line(Plane *plane) {
+  if (plane->cursor == NULL) return;
+  Box *top_box = plane->cursor, *bottom_box = NULL;
+  move_left_to_vert_line(top_box);
+  bottom_box = top_box;
+  move_down_to_horz_line(bottom_box);
+  shift_lines_up(top_box, bottom_box);
 }
 
 /*
@@ -742,7 +773,10 @@ bool delete_line_at_cursor_position(Plane *plane) {
 bool delete_char_before_cursor(Plane *plane) {
   if (plane->cursor == NULL && plane->cursor->left != NULL) return false;
   if (is_box_drawing_character(plane->cursor->left->ch)) {
-    return delete_line_at_cursor_position(plane);
+    if (is_empty_line(plane->cursor)) {
+      delete_line(plane);
+    }
+    return false;
   }
   Box *box = plane->cursor->left, *new_cursor = NULL;
   // shift characters one box left
