@@ -1,4 +1,5 @@
 # Changelog
+
 All notable changes to decision table editor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -9,15 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Saving file.
 - Creating swap file.
 - Handling existing swap files before opening original file (like in VIM).
-- Inserting a new line in cell when pressing ENTER.
-- Deletion continuation to previous row with deleting last empty line in cell.
-- Unwrapping following line to preceding line while deletion when the unwrapped text fits in previous line.
 - Deleting all whitespaces before next vertical line.
 - Deleting all but one whitespace before next vertical line.
-- Deleting empty bottom lines in all cells in row.
+- Deleting empty bottom lines in all cells in a row.
 - Display help when F1 pressed.
 - Switch to editing from help when ESC pressed.
-- Reserve status bar at the bottom line.
 - Display funny info when the size of the terminal is too small.
 - Repaint only required regions.
 - Repaint while terminal window is resized.
@@ -39,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Join cells.
 - Split cells.
 - Undo/Redo.
-- Enter (wrapping rows).
 - Delete multirow.
 - Replace mode.
 - Insert after mode.
@@ -53,9 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2022-11-03
+
+### Added
+
+- Inserting a new line in a cell when pressing ENTER.
+- Deletion continuation to previous row with deleting last empty line in cell.
+- Reserve status bar at the bottom line.
 
 ## [0.0.1] - 2022-10-22
+
 ### Added
+
 - Opening and displaying a decision table.
 - Simple cursor moving operations.
 - Simple editing operations.
