@@ -8,7 +8,7 @@ Terminal based editor for decision tables written in **C**.
 
 **WORK IN PROGRESS**
 
-### Box-drawing characters used to represent a decision table
+#### Box-drawing characters used to represent a decision table
 
 ```
  ┌ ─ ┬   ╥   ┐   
@@ -28,19 +28,19 @@ Terminal based editor for decision tables written in **C**.
 
 ## Dependencies
 
-### cmake
+#### cmake
 
 ```
 $ sudo dnf install cmake
 ```
 
-### Ninja
+#### Ninja
 
 ```
 $ sudo dnf install ninja-build
 ```
 
-### ncurses
+#### ncurses
 
 This decision table editor uses [ncurses](https://invisible-island.net/ncurses/) as a backend to interact with the
 terminal.
