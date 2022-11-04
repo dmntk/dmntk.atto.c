@@ -1,0 +1,7 @@
+#ifndef ATTO_ATTO_H
+#define ATTO_ATTO_H
+
+#define PROJECT_NAME "@PROJECT_NAME@"
+#define PROJECT_VERSION "v@atto_VERSION@"
+
+#endif // ATTO_ATTO_H

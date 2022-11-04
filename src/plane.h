@@ -1,5 +1,5 @@
-#ifndef PLANE_PLANE_H
-#define PLANE_PLANE_H
+#ifndef ATTO_PLANE_H
+#define ATTO_PLANE_H
 
 #include "box.h"
 
@@ -113,4 +113,4 @@ bool delete_char_before_cursor(Plane *plane);
 /* Splits current line at cursor position. */
 void split_line(Plane *plane);
 
-#endif // PLANE_PLANE_H
+#endif // ATTO_PLANE_H

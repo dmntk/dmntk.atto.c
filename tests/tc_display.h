@@ -1,6 +1,6 @@
-#ifndef PLANE_TC_DISPLAY_H
-#define PLANE_TC_DISPLAY_H
+#ifndef ATTO_TESTS_TC_DISPLAY_H
+#define ATTO_TESTS_TC_DISPLAY_H
 
 int tc_display();
 
-#endif // PLANE_TC_DISPLAY_H
+#endif // ATTO_TESTS_TC_DISPLAY_H

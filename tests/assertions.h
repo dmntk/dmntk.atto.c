@@ -1,5 +1,5 @@
-#ifndef PLANE_ASSERTIONS_H
-#define PLANE_ASSERTIONS_H
+#ifndef ATTO_TESTS_ASSERTIONS_H
+#define ATTO_TESTS_ASSERTIONS_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -35,4 +35,4 @@ bool assert_equal_cursor_pos(Position expected, Position actual);
 
 #define EQUAL_WIDE_STRING(expected, actual) assert_equal_wide_string(expected, actual)
 
-#endif // PLANE_ASSERTIONS_H
+#endif // ATTO_TESTS_ASSERTIONS_H

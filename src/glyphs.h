@@ -1,5 +1,5 @@
-#ifndef PLANE_GLYPHS_H
-#define PLANE_GLYPHS_H
+#ifndef ATTO_GLYPHS_H
+#define ATTO_GLYPHS_H
 
 #define WS                               L' '
 
@@ -49,4 +49,4 @@
 
 #define is_box_drawing_character(ch)     ((ch == L'┌') || (ch == L'┐') || (ch == L'└') || (ch == L'┘') || (ch == L'─') || (ch == L'│') || (ch == L'├') || (ch == L'┤') || (ch == L'┴') || (ch == L'┬') || (ch == L'┼') || (ch == L'╪') || (ch == L'╫') || (ch == L'╬') || (ch == L'╞') || (ch == L'╡') || (ch == L'╥') || (ch == L'╨') || (ch == L'═') || (ch == L'║') || (ch == L'╟') || (ch == L'╢') || (ch == L'╤') || (ch == L'╧'))
 
-#endif // PLANE_GLYPHS_H
+#endif // ATTO_GLYPHS_H

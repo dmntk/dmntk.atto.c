@@ -1,6 +1,8 @@
-project(atto C)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+cmake_policy(SET CMP0048 NEW)
+
+project(atto LANGUAGES C VERSION 0.0.3)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED YES)
@@ -18,6 +20,10 @@ set(SOURCES
   actions.h
   editor.c
   editor.h)
+
+configure_file(atto.h.in atto.h)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(CURSES_NEED_WIDE TRUE)
 set(CURSES_NEED_NCURSES TRUE)

@@ -1,19 +1,21 @@
 #include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <atto.h>
+
 #include "actions.h"
 
 /* Application name. */
-static char app_name[] = "plane";
+static char app_name[] = PROJECT_NAME;
 
 /* Application version. */
-const char *argp_program_version = "v0.0.3";
+const char *argp_program_version = PROJECT_VERSION;
 
 /* Application bug reporting address. */
-const char *argp_program_bug_address = "<plane@plane.io>";
+const char *argp_program_bug_address = "<atto@dmntk.io>";
 
 /* Application description. */
-static char doc[] = "plane";
+static char doc[] = "Decision table editor";
 
 /* A description of the application arguments. */
 static char args_doc[] = "INPUT_FILE";

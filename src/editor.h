@@ -1,5 +1,5 @@
-#ifndef PLANE_EDITOR_H
-#define PLANE_EDITOR_H
+#ifndef ATTO_EDITOR_H
+#define ATTO_EDITOR_H
 
 #include <ncurses.h>
 #include <malloc.h>
@@ -32,4 +32,4 @@ void editor_delete(Editor *editor);
 /* Starts editing. */
 void editor_run(Editor *editor);
 
-#endif // PLANE_EDITOR_H
+#endif // ATTO_EDITOR_H

@@ -1,5 +1,5 @@
-#ifndef PLANE_BOX_H
-#define PLANE_BOX_H
+#ifndef ATTO_BOX_H
+#define ATTO_BOX_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -32,4 +32,4 @@ wchar_t box_attributes_to_char(const Box *box);
 /* Returns visual representation of box's pointers. */
 wchar_t box_pointers_to_char(const Box *box);
 
-#endif // PLANE_BOX_H
+#endif // ATTO_BOX_H

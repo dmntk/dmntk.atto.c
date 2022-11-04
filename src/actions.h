@@ -1,5 +1,5 @@
-#ifndef PLANE_ACTIONS_H
-#define PLANE_ACTIONS_H
+#ifndef ATTO_ACTIONS_H
+#define ATTO_ACTIONS_H
 
 /*
  * Names of available actions.
@@ -19,4 +19,4 @@ struct Action {
 /* Processes command line arguments and returns the action to be invoked. */
 struct Action get_action(int argc, char *argv[]);
 
-#endif // PLANE_ACTIONS_H
+#endif // ATTO_ACTIONS_H
