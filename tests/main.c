@@ -12,10 +12,8 @@
 #include "tc_cursor_move_up.h"
 #include "tc_cursor_move_down.h"
 
-#define OUTPUT(s) #s
-#define STRINGIFY(s) OUTPUT(s)
-#define EQUALS(s1, s2) strcmp(s1, s2) == 0
-#define RUN_MATCH(name, test_name) if (EQUALS(name, STRINGIFY(test_name))) return test_name()
+#define EQUALS(s1, s2) (strcmp(s1, s2) == 0)
+#define RUN_MATCH(name, test_name) if (EQUALS(name, #test_name)) return test_name()
 #define RUN(test_name) if (test_name() == ASSERT_RESULT_FAILURE) return ASSERT_RESULT_FAILURE
 
 /*
@@ -61,6 +59,6 @@ int main(const int argc, const char *argv[]) {
         return EXIT_FAILURE;
     }
   }
-  printf("ERROR: invalid number of arguments, expected: 3, actual: %d\n", argc);
+  printf("ERROR: invalid number of arguments, expected: 2, actual: %d\n", argc);
   return EXIT_FAILURE;
 }
