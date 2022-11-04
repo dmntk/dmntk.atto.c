@@ -41,8 +41,8 @@
 /*
  * Definitions of operations on plane.
  */
-#define OP_INS 1
-#define OP_DEL 2
+#define OP_INSERT 1
+#define OP_DELETE 2
 
 /*
  * Creates a new empty plane.
@@ -91,8 +91,8 @@ void toggle_join_attributes(Plane *plane, const Box *current, const unsigned cha
     col = col->right;
   }
   is_end_crossing = (col != NULL) && (col->ch == L'┤');
-  clear_join_attributes = ((operation == OP_INS && is_end_crossing) ||
-                           (operation == OP_DEL && !up_side && is_end_crossing));
+  clear_join_attributes = ((operation == OP_INSERT && is_end_crossing) ||
+                           (operation == OP_DELETE && !up_side && is_end_crossing));
   if (clear_join_attributes) {
     col = plane->join;
     while (col != NULL) {
@@ -107,8 +107,8 @@ void toggle_join_attributes(Plane *plane, const Box *current, const unsigned cha
  */
 void plane_init(Plane *plane) {
   if (plane->start == NULL) return;
-  Box *row = plane->start; // points a currently processed row (first box in a row)
-  Box *col;                // points a currently processed column (box in a column)
+  Box *row = plane->start; // pointer to first box in currently processed row
+  Box *col;                // pointer to currently processed box in row
   bool found_join;         // flag indicating if the current row is the join between information item name and the body of the table
   while (row != NULL) {
     col = row;
@@ -701,7 +701,7 @@ void insert_char(Plane *plane, wchar_t ch) {
     // new character replaces the character under the cursor
     plane->cursor->ch = ch;
   } else {
-    toggle_join_attributes(plane, current, OP_INS);
+    toggle_join_attributes(plane, current, OP_INSERT);
     // There is no whitespace before the vertical line or the cursor is placed just before the vertical line.
     // A column of whitespaces must be inserted before the vertical line.
     row = current;
@@ -754,7 +754,7 @@ bool delete_char_under_cursor(Plane *plane) {
   box->ch = WS;
   // check, if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
-  toggle_join_attributes(plane, plane->cursor, OP_DEL);
+  toggle_join_attributes(plane, plane->cursor, OP_DELETE);
   if (only_whitespaces_before_vert_line(plane->cursor)) {
     new_cursor = delete_character_before_vert_line(plane->cursor);
     if (new_cursor != NULL) plane->cursor = new_cursor;
@@ -843,7 +843,7 @@ bool delete_char_before_cursor(Plane *plane) {
   box->ch = WS;
   // check, if before each vertical line there is a minimum one whitespace;
   // if so, then delete one whitespace before vertical line, and fix vertical pointers
-  toggle_join_attributes(plane, plane->cursor, OP_DEL);
+  toggle_join_attributes(plane, plane->cursor, OP_DELETE);
   if (only_whitespaces_before_vert_line(plane->cursor)) {
     new_cursor = delete_character_before_vert_line(plane->cursor);
     plane->cursor = new_cursor != NULL ? new_cursor : plane->cursor->left;
